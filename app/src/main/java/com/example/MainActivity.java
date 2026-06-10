@@ -1,0 +1,685 @@
+package com.example;
+
+import android.app.ProgressDialog;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.net.Uri;
+import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.adapter.VocabularyAdapter;
+import com.example.database.AppDatabase;
+import com.example.database.VocabularyDao;
+import com.example.database.WordDao;
+import com.example.model.VocabularyEntity;
+import com.example.model.WordEntity;
+import com.example.service.GeminiHelper;
+import com.example.service.PdfWordExtractor;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.textfield.TextInputEditText;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+/**
+ * 어플리케이션의 메인 대시보드 액티비티입니다.
+ * 하단바의 고유 세가지 탭을 한 화면 안에서 뷰 전환 기법으로 완벽히 통제 및 연동합니다.
+ * 1. 단어장 탭: 내 단어장 폴더 목록, 실시간 검색, 단어장 추가/편집 기법 연계
+ * 2. 학습 탭: SharedPreferences 연동 실시간 최근 학습 진척도 원형 프로그레스 표시 및 이어학습 기능
+ * 3. 추가/수정 탭: PDF 연동 AI 영단어 자동 추출 및 Gemini를 활용한 뜻 자동 완성, 단어 행 동적 입출력, 저장 탑재
+ */
+public class MainActivity extends AppCompatActivity implements VocabularyAdapter.OnVocabularyClickListener {
+
+    private static final int REQUEST_CODE_PDF_PICK = 422;
+
+    private AppDatabase db;
+    private VocabularyDao vocabularyDao;
+    private WordDao wordDao;
+    private ExecutorService dbExecutor;
+    private GeminiHelper geminiHelper;
+    private PdfWordExtractor pdfWordExtractor;
+
+    // Bottom Navigation
+    private BottomNavigationView bottomNavigation;
+
+    // Tab 1 UI
+    private View tabContainerVocab;
+    private RecyclerView rvVocabularies;
+    private VocabularyAdapter adapter;
+    private View layoutEmptyState;
+    private EditText etSearch;
+
+    // Tab 2 UI (학습 레포트)
+    private View tabContainerLearn;
+    private View cardLearnEmpty;
+    private View layoutLearnActive;
+    private TextView tvLearnVocabName;
+    private ProgressBar pbLearnCircle;
+    private TextView tvLearnPercent;
+    private TextView tvLearnProgressRatio;
+    private View btnResumeStudy;
+    private int currentLastStudiedVocabId = -1;
+
+    // Tab 3 UI (단어 입력 / 수정)
+    private View tabContainerAdd;
+    private TextView tvAddPageTitle;
+    private TextInputEditText etVocabName;
+    private TextInputEditText etVocabDesc;
+    private LinearLayout containerWordRows;
+    private int editingVocabularyId = 0; // 0이면 신규 추가, >0이면 특정 단어장 편집 수정
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        // 자원 할당
+        db = AppDatabase.getInstance(this);
+        vocabularyDao = db.vocabularyDao();
+        wordDao = db.wordDao();
+        dbExecutor = Executors.newSingleThreadExecutor();
+        geminiHelper = new GeminiHelper();
+        pdfWordExtractor = new PdfWordExtractor(this, geminiHelper);
+
+        // 메인 멀티 탭 구조 그릇 연결
+        tabContainerVocab = findViewById(R.id.tab_container_vocab);
+        tabContainerLearn = findViewById(R.id.tab_container_learn);
+        tabContainerAdd = findViewById(R.id.tab_container_add);
+
+        // --- TAB 1 (단어장 목록) 초기화 ---
+        rvVocabularies = findViewById(R.id.rv_vocabularies);
+        layoutEmptyState = findViewById(R.id.layout_empty_state);
+        etSearch = findViewById(R.id.et_search);
+
+        rvVocabularies.setLayoutManager(new LinearLayoutManager(this));
+        adapter = new VocabularyAdapter(this);
+        rvVocabularies.setAdapter(adapter);
+
+        // FAB은 단어 입력 및 편집 페이지로 바로 전환해 신규 단어장 모드로 설정
+        findViewById(R.id.fab_add_vocabulary).setOnClickListener(v -> switchTab(R.id.nav_add));
+
+        // 실시간 이름 검색 연동
+        etSearch.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                searchVocabularyFolders(s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
+
+        // --- TAB 2 (학습 레포트) 초기화 ---
+        cardLearnEmpty = findViewById(R.id.card_learn_empty);
+        layoutLearnActive = findViewById(R.id.layout_learn_active);
+        tvLearnVocabName = findViewById(R.id.tv_learn_vocab_name);
+        pbLearnCircle = findViewById(R.id.pb_learn_circle);
+        tvLearnPercent = findViewById(R.id.tv_learn_percent);
+        tvLearnProgressRatio = findViewById(R.id.tv_learn_progress_ratio);
+        btnResumeStudy = findViewById(R.id.btn_resume_study);
+
+        // 이어 학습 클릭 핸들러
+        btnResumeStudy.setOnClickListener(v -> {
+            if (currentLastStudiedVocabId != -1) {
+                Intent intent = new Intent(this, VocabularyDetailActivity.class);
+                intent.putExtra("VOCAB_ID", currentLastStudiedVocabId);
+                intent.putExtra("VOCAB_NAME", tvLearnVocabName.getText().toString());
+                startActivity(intent);
+            }
+        });
+
+        // --- TAB 3 (단어장 추가 및 편집) 초기화 ---
+        tvAddPageTitle = findViewById(R.id.tv_add_page_title);
+        etVocabName = findViewById(R.id.et_vocab_name);
+        etVocabDesc = findViewById(R.id.et_vocab_desc);
+        containerWordRows = findViewById(R.id.container_word_rows);
+
+        // 단어 추가 행 생성 리스너
+        findViewById(R.id.btn_add_row).setOnClickListener(v -> addNewWordRow("", ""));
+
+        // 단어장 저장 버튼 연결
+        findViewById(R.id.btn_save_vocabulary).setOnClickListener(v -> saveVocabularyData());
+
+        // AI 스마트 채우기 뜻 매핑 버튼 연결
+        findViewById(R.id.btn_ai_complete).setOnClickListener(v -> executeAiSmartFill());
+
+        // PDF 영단어 추출 및 업로드 연동 클릭
+        findViewById(R.id.btn_pdf_extract).setOnClickListener(v -> triggerPdfSelection());
+
+        // 도움말 버튼 토스트
+        findViewById(R.id.btn_add_help).setOnClickListener(v -> {
+            Toast.makeText(this, "AI 스마트 어시스턴트를 활용하면 PDF에서 기출 단어들을 고속 추출하거나 단어의 뜻을 자동으로 매핑할 수 있습니다.", Toast.LENGTH_LONG).show();
+        });
+
+        // 첫 기동 샘플 단어 점검 및 주입
+        checkAndPrepopulateSampleData();
+
+        // 하단바 클릭 탭 분기 핸들링
+        bottomNavigation = findViewById(R.id.bottom_navigation);
+        bottomNavigation.setOnItemSelectedListener(item -> {
+            switchTab(item.getItemId());
+            return true;
+        });
+
+        // 기본 활성 탭
+        bottomNavigation.setSelectedItemId(R.id.nav_vocab);
+    }
+
+    /**
+     * 지정된 탭 아이템 ID에 맞추어 화면 레이아웃들의 시각적 가시성 전환
+     */
+    private void switchTab(int itemId) {
+        if (itemId == R.id.nav_vocab) {
+            tabContainerVocab.setVisibility(View.VISIBLE);
+            tabContainerLearn.setVisibility(View.GONE);
+            tabContainerAdd.setVisibility(View.GONE);
+            findViewById(R.id.fab_add_vocabulary).setVisibility(View.VISIBLE);
+            // 메인 툴바 텍스트 복구
+            TextView tvTitle = findViewById(R.id.tv_main_title);
+            tvTitle.setText("AI 스마트 단어장");
+            loadVocabularyFolders();
+        } else if (itemId == R.id.nav_learn) {
+            tabContainerVocab.setVisibility(View.GONE);
+            tabContainerLearn.setVisibility(View.VISIBLE);
+            tabContainerAdd.setVisibility(View.GONE);
+            findViewById(R.id.fab_add_vocabulary).setVisibility(View.GONE);
+            // 메인 툴바 타이틀
+            TextView tvTitle = findViewById(R.id.tv_main_title);
+            tvTitle.setText("나의 실시간 학습");
+            loadLearningReport();
+        } else if (itemId == R.id.nav_add) {
+            tabContainerVocab.setVisibility(View.GONE);
+            tabContainerLearn.setVisibility(View.GONE);
+            tabContainerAdd.setVisibility(View.VISIBLE);
+            findViewById(R.id.fab_add_vocabulary).setVisibility(View.GONE);
+            // 메인 툴바 타이틀
+            TextView tvTitle = findViewById(R.id.tv_main_title);
+            tvTitle.setText("단어장 편집실");
+
+            // 만약 현재 수정 기조(editingVocabularyId > 0)가 아니라면, 깨끗이 비우고 3개 기본행 제공
+            if (editingVocabularyId == 0) {
+                tvAddPageTitle.setText("새 단어장 추가");
+                etVocabName.setText("");
+                etVocabDesc.setText("");
+                containerWordRows.removeAllViews();
+                addNewWordRow("", "");
+                addNewWordRow("", "");
+                addNewWordRow("", "");
+            }
+        } else if (itemId == R.id.nav_settings) {
+            Toast.makeText(this, "설정 창은 다음 추가 편의 기능 업데이트 예정입니다.", Toast.LENGTH_SHORT).show();
+            // 탭 변경 없이 이전 탭 유지되도록 재설정 방지
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // 상세 학습하고 돌아왔을 때, 혹시 기록이 있는지 파악하여 학습 리포트 최신화 대비
+        if (bottomNavigation.getSelectedItemId() == R.id.nav_learn) {
+            loadLearningReport();
+        } else if (bottomNavigation.getSelectedItemId() == R.id.nav_vocab) {
+            loadVocabularyFolders();
+        }
+    }
+
+    // --- TAB 1: 내 단어장 데이터 로딩 및 검색 실무 ---
+
+    private void loadVocabularyFolders() {
+        dbExecutor.execute(() -> {
+            final List<VocabularyEntity> list = vocabularyDao.getAllVocabularies();
+            runOnUiThread(() -> updateUI(list));
+        });
+    }
+
+    private void searchVocabularyFolders(String query) {
+        if (query == null || query.trim().isEmpty()) {
+            loadVocabularyFolders();
+            return;
+        }
+        dbExecutor.execute(() -> {
+            final List<VocabularyEntity> list = vocabularyDao.searchVocabularies("%" + query + "%");
+            runOnUiThread(() -> updateUI(list));
+        });
+    }
+
+    private void updateUI(List<VocabularyEntity> list) {
+        if (list == null || list.isEmpty()) {
+            layoutEmptyState.setVisibility(View.VISIBLE);
+            rvVocabularies.setVisibility(View.GONE);
+        } else {
+            layoutEmptyState.setVisibility(View.GONE);
+            rvVocabularies.setVisibility(View.VISIBLE);
+            adapter.setVocabularyList(list);
+        }
+    }
+
+    // --- TAB 2: 학습 진행 통계 리포트 로드 실무 (사용자 구체적 편의 개선) ---
+
+    private void loadLearningReport() {
+        SharedPreferences prefs = getSharedPreferences("StudyPrefs", MODE_PRIVATE);
+        final int lastStudiedId = prefs.getInt("last_studied_vocab_id", -1);
+
+        if (lastStudiedId == -1) {
+            cardLearnEmpty.setVisibility(View.VISIBLE);
+            layoutLearnActive.setVisibility(View.GONE);
+        } else {
+            currentLastStudiedVocabId = lastStudiedId;
+            final String savedName = prefs.getString("vocab_name_" + lastStudiedId, "학습 단어장");
+            final int progress = prefs.getInt("vocab_progress_" + lastStudiedId, 0);
+            final int total = prefs.getInt("vocab_total_" + lastStudiedId, 0);
+
+            // UI 매핑
+            tvLearnVocabName.setText(savedName);
+            tvLearnProgressRatio.setText("학습 마일스톤: " + progress + " / " + total + " 단어 완료");
+
+            if (total > 0) {
+                int percentage = (int) (((float) progress / total) * 100);
+                pbLearnCircle.setProgress(percentage);
+                tvLearnPercent.setText(percentage + "%");
+            } else {
+                pbLearnCircle.setProgress(0);
+                tvLearnPercent.setText("0%");
+            }
+
+            cardLearnEmpty.setVisibility(View.GONE);
+            layoutLearnActive.setVisibility(View.VISIBLE);
+        }
+    }
+
+    // --- TAB 3: 단어 입력 및 AI 스마트 툴 구현 실무 ---
+
+    /**
+     * 단어 혹은 뜻 입력을 위한 가로 텍스트행 추가 생성 메커니즘
+     */
+    private void addNewWordRow(String wordText, String meaningText) {
+        View row = LayoutInflater.from(this).inflate(R.layout.item_word_input_row, containerWordRows, false);
+        final EditText etWord = row.findViewById(R.id.et_row_word);
+        final EditText etMeaning = row.findViewById(R.id.et_row_meaning);
+        final View btnDelete = row.findViewById(R.id.btn_row_delete);
+
+        etWord.setText(wordText);
+        etMeaning.setText(meaningText);
+
+        btnDelete.setOnClickListener(v -> containerWordRows.removeView(row));
+
+        containerWordRows.addView(row);
+    }
+
+    /**
+     * 단어 입력 정보를 바탕으로 뜻을 AI(Gemini 3.5 Flash)를 통해 자동 제안 한화면에 세팅
+     */
+    private void executeAiSmartFill() {
+        final List<String> wordsToFill = new ArrayList<>();
+        final List<EditText> targetMeaningsList = new ArrayList<>();
+
+        // 현재 추가되어 있는 행들 루핑하며 미비한 뜻 수집
+        for (int i = 0; i < containerWordRows.getChildCount(); i++) {
+            View row = containerWordRows.getChildAt(i);
+            EditText etW = row.findViewById(R.id.et_row_word);
+            EditText etM = row.findViewById(R.id.et_row_meaning);
+
+            String w = etW.getText().toString().trim();
+            if (!w.isEmpty()) {
+                wordsToFill.add(w);
+                targetMeaningsList.add(etM);
+            }
+        }
+
+        if (wordsToFill.isEmpty()) {
+            Toast.makeText(this, "뜻을 매칭하고 완성할 영단어를 최소 1개 이상 왼쪽 폼에 입력해 주세요.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        final ProgressDialog dialog = new ProgressDialog(this);
+        dialog.setMessage("스마트 AI가 입력한 핵심 영단어 뜻풀이와 파생 의미를 분석하여 추천 기재 중입니다...");
+        dialog.setCancelable(false);
+        dialog.show();
+
+        geminiHelper.fillMeanings(wordsToFill, new GeminiHelper.GeminiCallback() {
+            @Override
+            public void onSuccess(List<GeminiHelper.WordResult> results) {
+                dialog.dismiss();
+                if (results == null || results.isEmpty()) {
+                    Toast.makeText(MainActivity.this, "AI 분석 뜻을 생성하지 못했습니다.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                int matchCount = 0;
+                // UI 순서에 알맞게 단어 뜻 자동 배치
+                for (GeminiHelper.WordResult res : results) {
+                    for (int i = 0; i < containerWordRows.getChildCount(); i++) {
+                        View row = containerWordRows.getChildAt(i);
+                        EditText etW = row.findViewById(R.id.et_row_word);
+                        EditText etM = row.findViewById(R.id.et_row_meaning);
+
+                        String currentWord = etW.getText().toString().trim();
+                        if (currentWord.equalsIgnoreCase(res.word)) {
+                            etM.setText(res.meaning);
+                            matchCount++;
+                            break;
+                        }
+                    }
+                }
+                Toast.makeText(MainActivity.this, "총 " + matchCount + "개의 영어 어휘 뜻풀이가 AI로 자동 삽입 보완 완료되었습니다!", Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                dialog.dismiss();
+                Toast.makeText(MainActivity.this, errorMessage, Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    /**
+     * PDF 파선택을 유도하는 인텐트 트리거
+     */
+    private void triggerPdfSelection() {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("application/pdf");
+        startActivityForResult(intent, REQUEST_CODE_PDF_PICK);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_CODE_PDF_PICK && resultCode == RESULT_OK && data != null && data.getData() != null) {
+            processPdfFile(data.getData());
+        }
+    }
+
+    /**
+     * 선택한 PDF의 페이지를 순서대로 분석하여 추출된 단어를 입력 행에 추가합니다.
+     */
+    private void processPdfFile(Uri uri) {
+        if (!GeminiHelper.isApiConfigured()) {
+            Toast.makeText(
+                    this,
+                    "Gemini API Key가 설정되지 않았습니다. 프로젝트 루트의 .env 파일을 확인해 주세요.",
+                    Toast.LENGTH_LONG
+            ).show();
+            return;
+        }
+
+        final ProgressDialog progress = new ProgressDialog(this);
+        progress.setMessage("가져온 PDF 학습 문서를 분석하기 위해 준비 중입니다...");
+        progress.setCancelable(false);
+        progress.show();
+
+        pdfWordExtractor.extract(uri, new PdfWordExtractor.Callback() {
+            @Override
+            public void onProgress(int currentPage, int totalPages) {
+                progress.setMessage(
+                        "PDF " + currentPage + " / " + totalPages + " 페이지에서 단어를 추출하는 중입니다..."
+                );
+            }
+
+            @Override
+            public void onSuccess(
+                    List<GeminiHelper.WordResult> results,
+                    int processedPages,
+                    boolean pageLimitApplied
+            ) {
+                progress.dismiss();
+                if (results == null || results.isEmpty()) {
+                    Toast.makeText(
+                            MainActivity.this,
+                            "PDF에서 중요 단어를 추출하지 못했습니다.",
+                            Toast.LENGTH_SHORT
+                    ).show();
+                    return;
+                }
+
+                boolean hasContent = false;
+                for (int i = 0; i < containerWordRows.getChildCount(); i++) {
+                    View row = containerWordRows.getChildAt(i);
+                    EditText etWord = row.findViewById(R.id.et_row_word);
+                    if (!etWord.getText().toString().trim().isEmpty()) {
+                        hasContent = true;
+                        break;
+                    }
+                }
+                if (!hasContent) {
+                    containerWordRows.removeAllViews();
+                }
+
+                for (GeminiHelper.WordResult result : results) {
+                    addNewWordRow(result.word, result.meaning);
+                }
+
+                String limitMessage = pageLimitApplied
+                        ? " 최대 " + PdfWordExtractor.MAX_PAGES + "페이지만 처리했습니다."
+                        : "";
+                Toast.makeText(
+                        MainActivity.this,
+                        processedPages + "페이지 분석 완료, 중복 제외 " + results.size()
+                                + "개 단어를 추가했습니다." + limitMessage,
+                        Toast.LENGTH_LONG
+                ).show();
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                progress.dismiss();
+                Toast.makeText(MainActivity.this, errorMessage, Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    /**
+     * 입력실에 구성 완료한 데이터를 최종 DB에 갱신/추가 세진처리
+     */
+    private void saveVocabularyData() {
+        final String name = etVocabName.getText().toString().trim();
+        final String desc = etVocabDesc.getText().toString().trim();
+
+        if (name.isEmpty()) {
+            Toast.makeText(this, "단어장 이름을 반드시 입력해 주세요.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // 수집된 목록 목록 체크
+        final List<WordEntity> targetWords = new ArrayList<>();
+        for (int i = 0; i < containerWordRows.getChildCount(); i++) {
+            View row = containerWordRows.getChildAt(i);
+            EditText etW = row.findViewById(R.id.et_row_word);
+            EditText etM = row.findViewById(R.id.et_row_meaning);
+
+            String w = etW.getText().toString().trim();
+            String m = etM.getText().toString().trim();
+
+            if (!w.isEmpty()) {
+                // 단어객체 가상 형성 (vocabularyId는 추적저장 시 조절)
+                targetWords.add(new WordEntity(0, w, m));
+            }
+        }
+
+        if (targetWords.isEmpty()) {
+            Toast.makeText(this, "단어를 최소한 1가지 이상 입력해 주세요.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        final ProgressDialog dialog = new ProgressDialog(this);
+        dialog.setMessage("단어장 세부 정보를 저장하고 디비에 반영 중입니다...");
+        dialog.setCancelable(false);
+        dialog.show();
+
+        dbExecutor.execute(() -> {
+            if (editingVocabularyId > 0) {
+                // 1. 단어장 업데이트
+                VocabularyEntity folder = vocabularyDao.getVocabularyById(editingVocabularyId);
+                if (folder != null) {
+                    folder.setName(name);
+                    folder.setDescription(desc);
+                    vocabularyDao.update(folder);
+
+                    // 2. 해당 단어장 이전 단어 덤프 폭포 클린 아웃
+                    wordDao.deleteWordsByVocabularyId(editingVocabularyId);
+
+                    // 3. 다시 깨끗이 기재 주입
+                    for (WordEntity wrd : targetWords) {
+                        wrd.setVocabularyId(editingVocabularyId);
+                        wordDao.insert(wrd);
+                    }
+                }
+            } else {
+                // 신규
+                VocabularyEntity folder = new VocabularyEntity(name, desc);
+                long newId = vocabularyDao.insert(folder);
+
+                for (WordEntity wrd : targetWords) {
+                    wrd.setVocabularyId((int) newId);
+                    wordDao.insert(wrd);
+                }
+            }
+
+            runOnUiThread(() -> {
+                dialog.dismiss();
+                Toast.makeText(MainActivity.this, "단어장과 어휘 카드가 성공적으로 안전하게 저장되었습니다!", Toast.LENGTH_SHORT).show();
+                
+                // 신규/수정 상태 클리어링
+                editingVocabularyId = 0;
+                
+                // 탭 1로 원상 복구 귀환
+                bottomNavigation.setSelectedItemId(R.id.nav_vocab);
+            });
+        });
+    }
+
+    // --- 단어장 삭제 질문 대화상자 ---
+
+    private void showDeleteConfirmDialog(final VocabularyEntity vocabulary) {
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("단어장 영구 삭제")
+                .setMessage("정말 [" + vocabulary.getName() + "] 단어장을 영구적으로 삭제하시겠습니까?\n내부에 소속된 전 수록단어 및 학습 기록도 함께 삭제처리됩니다.")
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .setPositiveButton("삭제", (dialog, which) -> {
+                    dbExecutor.execute(() -> {
+                        vocabularyDao.delete(vocabulary);
+                        
+                        // 학습 통 기록에 해당 단어장이 지워졌다면 SharedPreferences 클리어 대비
+                        SharedPreferences prefs = getSharedPreferences("StudyPrefs", MODE_PRIVATE);
+                        if (prefs.getInt("last_studied_vocab_id", -1) == vocabulary.getId()) {
+                            prefs.edit().remove("last_studied_vocab_id").apply();
+                        }
+                        
+                        loadVocabularyFolders();
+                    });
+                    Toast.makeText(MainActivity.this, "단어장이 완전 삭제되었습니다.", Toast.LENGTH_SHORT).show();
+                })
+                .setNegativeButton("취소", (dialog, which) -> dialog.dismiss())
+                .show();
+    }
+
+    // --- Vocabulary Adapter 클릭 수신 위임 구조 구현 ---
+
+    @Override
+    public void onItemClick(VocabularyEntity vocabulary) {
+        // 단어장 카드 클릭 시: 상세 플래시카드 학습 페이지로 가동 출발!
+        Intent intent = new Intent(this, VocabularyDetailActivity.class);
+        intent.putExtra("VOCAB_ID", vocabulary.getId());
+        intent.putExtra("VOCAB_NAME", vocabulary.getName());
+        startActivity(intent);
+    }
+
+    @Override
+    public void onEditClick(VocabularyEntity vocabulary) {
+        // 수정 버튼을 눌렀을 경우: 팝업창이 뜨는 것이 전혀 아니며, 단어 입력(Tab 3) 페이지로 이동!
+        editingVocabularyId = vocabulary.getId();
+        tvAddPageTitle.setText("단어장 편집 및 수정");
+        etVocabName.setText(vocabulary.getName());
+        etVocabDesc.setText(vocabulary.getDescription());
+        containerWordRows.removeAllViews();
+
+        final ProgressDialog waiting = new ProgressDialog(this);
+        waiting.setMessage("저장되어 있는 어휘 목록을 불러오는 중입니다...");
+        waiting.show();
+
+        dbExecutor.execute(() -> {
+            final List<WordEntity> words = wordDao.getWordsByVocabularyId(vocabulary.getId());
+            runOnUiThread(() -> {
+                waiting.dismiss();
+                if (words != null && !words.isEmpty()) {
+                    for (WordEntity w : words) {
+                        addNewWordRow(w.getWord(), w.getMeaning());
+                    }
+                } else {
+                    addNewWordRow("", "");
+                    addNewWordRow("", "");
+                    addNewWordRow("", "");
+                }
+                
+                // 단어 입력 페이지에 해당하는 nav_add 탭 선택 전환
+                bottomNavigation.setSelectedItemId(R.id.nav_add);
+            });
+        });
+    }
+
+    @Override
+    public void onDeleteClick(VocabularyEntity vocabulary) {
+        showDeleteConfirmDialog(vocabulary);
+    }
+
+    private void checkAndPrepopulateSampleData() {
+        dbExecutor.execute(() -> {
+            List<VocabularyEntity> currentList = vocabularyDao.getAllVocabularies();
+            if (currentList == null || currentList.isEmpty()) {
+                // 1. 비즈니스 단어셋
+                VocabularyEntity v1 = new VocabularyEntity("비즈니스 영어 실전", "실제 미팅과 이메일 작성 시 가장 빈번히 사용되는 실무 영어");
+                long id1 = vocabularyDao.insert(v1);
+                wordDao.insert(new WordEntity((int)id1, "Collaborate", "협력하다 (동사)"));
+                wordDao.insert(new WordEntity((int)id1, "Agenda", "회의 의제, 안건 (명사)"));
+                wordDao.insert(new WordEntity((int)id1, "Deliverable", "최종 성과물 (명사)"));
+                wordDao.insert(new WordEntity((int)id1, "Outcome", "결과, 성과 (명사)"));
+
+                // 2. 여행 기초 회화
+                VocabularyEntity v2 = new VocabularyEntity("여행 기초 회화 단어집", "여행 상황 속에서 살아남기 위한 필수 어휘 덤프");
+                long id2 = vocabularyDao.insert(v2);
+                wordDao.insert(new WordEntity((int)id2, "Destination", "목적지 (명사)"));
+                wordDao.insert(new WordEntity((int)id2, "Boarding", "탑승 (명사)"));
+                wordDao.insert(new WordEntity((int)id2, "Reservation", "예약 (명사)"));
+                wordDao.insert(new WordEntity((int)id2, "Departure", "출발 (명사)"));
+
+                loadVocabularyFolders();
+            } else {
+                loadVocabularyFolders();
+            }
+        });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (dbExecutor != null && !dbExecutor.isShutdown()) {
+            dbExecutor.shutdown();
+        }
+        if (pdfWordExtractor != null) {
+            pdfWordExtractor.shutdown();
+        }
+        if (geminiHelper != null) {
+            geminiHelper.shutdown();
+        }
+    }
+}

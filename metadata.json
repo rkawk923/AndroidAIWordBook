@@ -1,0 +1,6 @@
+{
+  "name": "AI 단어장",
+  "description": "갈릴레오 AI 디자인을 반영한 Room DB 기반의 스마트 단어장 앱",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

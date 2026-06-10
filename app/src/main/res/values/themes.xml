@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.MyApplication" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">#0058bc</item>
+        <item name="colorOnPrimary">#ffffff</item>
+        <item name="colorSecondary">#54606b</item>
+        <item name="colorSurface">#faf9fe</item>
+        <item name="colorOnSurface">#1a1b1f</item>
+    </style>
+</resources>
