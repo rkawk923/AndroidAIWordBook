@@ -1,52 +1,65 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    style="@style/Widget.AIWordBook.Card.WordInput"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:gravity="center_vertical"
-    android:paddingVertical="@dimen/space_6">
+    android:layout_marginBottom="@dimen/space_8">
 
-    <!-- Word input field -->
-    <EditText
-        android:id="@+id/et_row_word"
-        android:layout_width="0dp"
-        android:layout_height="@dimen/input_height"
-        android:layout_weight="1"
-        android:background="@drawable/bg_input"
-        android:gravity="center_vertical"
-        android:hint="영단어"
-        android:textColor="@color/app_text_primary"
-        android:textColorHint="@color/app_text_tertiary"
-        android:textSize="@dimen/text_body"
-        android:inputType="text"
-        android:maxLines="1"
-        android:layout_marginEnd="@dimen/space_6" />
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/word_input_row_padding">
 
-    <!-- Meaning input field -->
-    <EditText
-        android:id="@+id/et_row_meaning"
-        android:layout_width="0dp"
-        android:layout_height="@dimen/input_height"
-        android:layout_weight="1"
-        android:background="@drawable/bg_input"
-        android:gravity="center_vertical"
-        android:hint="뜻"
-        android:textColor="@color/app_text_primary"
-        android:textColorHint="@color/app_text_tertiary"
-        android:textSize="@dimen/text_body"
-        android:inputType="text"
-        android:maxLines="1" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_toStartOf="@id/btn_row_delete"
+            android:layout_marginEnd="@dimen/space_8"
+            android:orientation="vertical">
 
-    <!-- Delete button -->
-    <ImageView
-        android:id="@+id/btn_row_delete"
-        android:layout_width="@dimen/touch_target"
-        android:layout_height="@dimen/touch_target"
-        android:layout_marginStart="@dimen/space_4"
-        android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:src="@android:drawable/ic_menu_delete"
-        android:tint="@color/app_danger"
-        android:scaleType="centerInside"
-        android:contentDescription="삭제" />
+            <EditText
+                android:id="@+id/et_row_word"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/input_height"
+                android:background="@drawable/bg_input"
+                android:gravity="center_vertical"
+                android:hint="영단어"
+                android:inputType="text"
+                android:maxLines="1"
+                android:textColor="@color/app_text_primary"
+                android:textColorHint="@color/app_text_tertiary"
+                android:textSize="@dimen/text_body" />
 
-</LinearLayout>
+            <EditText
+                android:id="@+id/et_row_meaning"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/input_height"
+                android:layout_marginTop="@dimen/space_8"
+                android:background="@drawable/bg_input"
+                android:gravity="center_vertical"
+                android:hint="뜻"
+                android:inputType="text"
+                android:maxLines="1"
+                android:textColor="@color/app_text_primary"
+                android:textColorHint="@color/app_text_tertiary"
+                android:textSize="@dimen/text_body" />
+
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/btn_row_delete"
+            android:layout_width="@dimen/touch_target"
+            android:layout_height="@dimen/touch_target"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentTop="true"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="단어 삭제"
+            android:padding="@dimen/space_12"
+            android:src="@android:drawable/ic_menu_delete"
+            android:tint="@color/app_danger"
+            app:backgroundTint="@android:color/transparent" />
+
+    </RelativeLayout>
+
+</com.google.android.material.card.MaterialCardView>

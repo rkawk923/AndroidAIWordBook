@@ -365,7 +365,9 @@
                 android:id="@+id/tab_container_add"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:clipToPadding="false"
                 android:fillViewport="true"
+                android:overScrollMode="never"
                 android:visibility="gone">
 
                 <LinearLayout
@@ -373,7 +375,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:padding="@dimen/screen_padding"
-                    android:paddingBottom="@dimen/space_48">
+                    android:paddingBottom="@dimen/space_32">
 
                     <RelativeLayout
                         android:layout_width="match_parent"
@@ -391,7 +393,7 @@
                             android:ellipsize="end"
                             android:maxLines="2"
                             android:text="새 단어장 추가"
-                            android:textAppearance="@style/TextAppearance.AIWordBook.Headline" />
+                            android:textAppearance="@style/TextAppearance.AIWordBook.Title" />
 
                         <ImageView
                             android:id="@+id/btn_add_help"
@@ -407,44 +409,124 @@
 
                     </RelativeLayout>
 
-                    <!-- Input Vocab Name -->
-                    <com.google.android.material.textfield.TextInputLayout
-                        style="@style/Widget.AIWordBook.TextInputLayout"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="@dimen/space_12"
-                        android:hint="단어장 이름 (예: 수능 영단어 필수)">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/et_vocab_name"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:textColor="@color/app_text_primary"
-                            android:inputType="text" />
-
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <!-- Input Vocab Description -->
-                    <com.google.android.material.textfield.TextInputLayout
-                        style="@style/Widget.AIWordBook.TextInputLayout"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="@dimen/space_16"
-                        android:hint="단어장 설명 (간단한 메모)">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/et_vocab_desc"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:textColor="@color/app_text_primary"
-                            android:inputType="textLongMessage"
-                            android:maxLines="3" />
-
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <!-- AI Smart Assistants Frame -->
+                    <!-- Vocabulary information -->
                     <com.google.android.material.card.MaterialCardView
-                        style="@style/Widget.AIWordBook.Card.Highlight"
+                        style="@style/Widget.AIWordBook.Card"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="@dimen/space_16">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="@dimen/card_padding">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="@dimen/space_12"
+                                android:text="단어장 정보"
+                                android:textAppearance="@style/TextAppearance.AIWordBook.Title"
+                                android:textSize="@dimen/text_body_large" />
+
+                            <com.google.android.material.textfield.TextInputLayout
+                                style="@style/Widget.AIWordBook.TextInputLayout"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="@dimen/space_12"
+                                android:hint="단어장 이름">
+
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/et_vocab_name"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:inputType="text"
+                                    android:maxLines="1"
+                                    android:textColor="@color/app_text_primary"
+                                    android:textSize="@dimen/text_body_large" />
+
+                            </com.google.android.material.textfield.TextInputLayout>
+
+                            <com.google.android.material.textfield.TextInputLayout
+                                style="@style/Widget.AIWordBook.TextInputLayout"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:hint="설명 또는 학습 목적">
+
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/et_vocab_desc"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="top|start"
+                                    android:inputType="textCapSentences|textMultiLine"
+                                    android:maxLines="3"
+                                    android:minLines="2"
+                                    android:textColor="@color/app_text_primary"
+                                    android:textSize="@dimen/text_body" />
+
+                            </com.google.android.material.textfield.TextInputLayout>
+
+                        </LinearLayout>
+
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <!-- AI tools -->
+                    <com.google.android.material.card.MaterialCardView
+                        style="@style/Widget.AIWordBook.Card"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="@dimen/space_16">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="@dimen/card_padding">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="AI 학습 도구"
+                                android:textAppearance="@style/TextAppearance.AIWordBook.Title"
+                                android:textSize="@dimen/text_body_large" />
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="@dimen/space_4"
+                                android:layout_marginBottom="@dimen/space_16"
+                                android:text="PDF에서 단어를 가져오거나 입력한 단어의 빈 뜻을 채울 수 있어요."
+                                android:textAppearance="@style/TextAppearance.AIWordBook.Body.Secondary" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btn_pdf_extract"
+                                style="@style/Widget.AIWordBook.Button.Secondary"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:minHeight="@dimen/button_height"
+                                android:text="PDF에서 단어 가져오기"
+                                android:textColor="@color/app_primary"
+                                android:maxLines="1"
+                                android:layout_marginBottom="@dimen/space_8" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btn_ai_complete"
+                                style="@style/Widget.AIWordBook.Button.Secondary"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:minHeight="@dimen/button_height"
+                                android:text="빈 뜻 AI로 채우기"
+                                android:textColor="@color/app_primary"
+                                android:maxLines="1" />
+
+                        </LinearLayout>
+
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <!-- Vocabulary entries -->
+                    <com.google.android.material.card.MaterialCardView
+                        style="@style/Widget.AIWordBook.Card"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="@dimen/space_24">
@@ -458,67 +540,36 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="AI 단어 도우미"
-                                android:textColor="@color/app_primary"
-                                android:textSize="@dimen/text_body"
-                                android:textStyle="bold"
+                                android:text="단어 목록"
+                                android:textAppearance="@style/TextAppearance.AIWordBook.Title"
+                                android:textSize="@dimen/text_body_large" />
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="@dimen/space_4"
+                                android:layout_marginBottom="@dimen/space_12"
+                                android:text="영단어와 뜻을 한 쌍씩 입력해 주세요."
+                                android:textAppearance="@style/TextAppearance.AIWordBook.Body.Secondary" />
+
+                            <LinearLayout
+                                android:id="@+id/container_word_rows"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
                                 android:layout_marginBottom="@dimen/space_12" />
 
-                            <!-- Extra PDF Button -->
                             <com.google.android.material.button.MaterialButton
-                                android:id="@+id/btn_pdf_extract"
+                                android:id="@+id/btn_add_row"
                                 style="@style/Widget.AIWordBook.Button.Secondary"
                                 android:layout_width="match_parent"
                                 android:layout_height="@dimen/button_height"
-                                android:text="PDF에서 단어 추출"
-                                android:textAlignment="viewStart"
-                                android:textColor="@color/app_primary"
-                                app:icon="@android:drawable/ic_menu_add"
-                                app:iconTint="@color/app_primary"
-                                android:layout_marginBottom="@dimen/space_8" />
-
-                            <!-- Smart Recommend Fill button -->
-                            <com.google.android.material.button.MaterialButton
-                                android:id="@+id/btn_ai_complete"
-                                style="@style/Widget.AIWordBook.Button.Secondary"
-                                android:layout_width="match_parent"
-                                android:layout_height="@dimen/button_height"
-                                android:text="AI로 빈 뜻 채우기"
-                                android:textAlignment="viewStart"
-                                android:textColor="@color/app_primary"
-                                app:icon="@android:drawable/ic_menu_compass"
-                                app:iconTint="@color/app_primary" />
+                                android:text="단어 추가" />
 
                         </LinearLayout>
 
                     </com.google.android.material.card.MaterialCardView>
 
-                    <!-- Heading for words list -->
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="단어 목록 입력"
-                        android:textAppearance="@style/TextAppearance.AIWordBook.Title"
-                        android:layout_marginBottom="@dimen/space_8" />
-
-                    <!-- Container where we dynamically add Rows of item_word_input_row -->
-                    <LinearLayout
-                        android:id="@+id/container_word_rows"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:layout_marginBottom="@dimen/space_12" />
-
-                    <!-- Button: Add row -->
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btn_add_row"
-                        style="@style/Widget.AIWordBook.Button.Secondary"
-                        android:layout_width="match_parent"
-                        android:layout_height="@dimen/button_height"
-                        android:text="+ 단어 추가하기"
-                        android:layout_marginBottom="@dimen/space_32" />
-
-                    <!-- Promo/Actions panel -->
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_save_vocabulary"
                         style="@style/Widget.AIWordBook.Button.Primary"

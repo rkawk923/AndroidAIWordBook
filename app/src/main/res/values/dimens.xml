@@ -33,6 +33,7 @@
     <dimen name="vocabulary_list_bottom_padding">112dp</dimen>
     <dimen name="card_action_height">40dp</dimen>
     <dimen name="card_action_min_width">72dp</dimen>
+    <dimen name="word_input_row_padding">12dp</dimen>
 
     <!-- Shape -->
     <dimen name="radius_extra_small">8dp</dimen>

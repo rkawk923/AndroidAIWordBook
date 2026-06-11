@@ -68,6 +68,11 @@
         <item name="strokeWidth">@dimen/stroke_width</item>
     </style>
 
+    <style name="Widget.AIWordBook.Card.WordInput" parent="Widget.AIWordBook.Card">
+        <item name="cardBackgroundColor">@color/app_surface_subtle</item>
+        <item name="cardCornerRadius">@dimen/radius_medium</item>
+    </style>
+
     <!-- Buttons -->
     <style name="Widget.AIWordBook.Button.Primary" parent="Widget.Material3.Button">
         <item name="android:minHeight">@dimen/button_height</item>
