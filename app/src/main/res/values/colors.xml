@@ -1,30 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- App surfaces -->
-    <color name="app_background">#F5F6F8</color>
+    <!-- Neutral surfaces -->
+    <color name="app_background">#F4F6F8</color>
     <color name="app_surface">#FFFFFF</color>
-    <color name="app_surface_subtle">#F1F3F5</color>
-    <color name="app_surface_blue">#EDF4FF</color>
+    <color name="app_surface_subtle">#F2F4F6</color>
+    <color name="app_surface_pressed">#E9ECEF</color>
+    <color name="app_surface_blue">#F0F5FF</color>
 
-    <!-- Brand and states -->
-    <color name="app_primary">#3182F6</color>
-    <color name="app_primary_dark">#1B64DA</color>
-    <color name="app_primary_soft">#E8F3FF</color>
-    <color name="app_success">#2F8F5B</color>
-    <color name="app_danger">#E5484D</color>
+    <!-- Brand -->
+    <color name="app_primary">#1B64DA</color>
+    <color name="app_primary_dark">#1554B8</color>
+    <color name="app_primary_soft">#E8F1FF</color>
+    <color name="app_primary_disabled">#B8C9E8</color>
 
-    <!-- Text and lines -->
+    <!-- Semantic states -->
+    <color name="app_success">#16845B</color>
+    <color name="app_danger">#D92D3A</color>
+    <color name="app_danger_pressed">#B4232E</color>
+    <color name="app_danger_soft">#FFF0F1</color>
+
+    <!-- Text -->
     <color name="app_text_primary">#191F28</color>
     <color name="app_text_secondary">#4E5968</color>
-    <color name="app_text_tertiary">#8B95A1</color>
-    <color name="app_border">#E5E8EB</color>
-    <color name="app_divider">#EDF0F2</color>
+    <color name="app_text_tertiary">#6B7684</color>
+    <color name="app_text_disabled">#ADB5BD</color>
+    <color name="app_text_on_primary">#FFFFFF</color>
 
-    <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF6200EE</color>
-    <color name="purple_700">#FF3700B3</color>
-    <color name="teal_200">#FF03DAC5</color>
-    <color name="teal_700">#FF018786</color>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <!-- Lines and interaction overlays -->
+    <color name="app_border">#E1E5E9</color>
+    <color name="app_border_strong">#C9D0D8</color>
+    <color name="app_divider">#E9ECEF</color>
+    <color name="app_ripple_light">#1AFFFFFF</color>
+    <color name="app_ripple_dark">#14191F28</color>
 </resources>

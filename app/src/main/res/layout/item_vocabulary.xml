@@ -6,15 +6,19 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="@dimen/screen_padding"
-    android:layout_marginVertical="@dimen/space_6"
+    android:layout_marginTop="@dimen/space_8"
+    android:layout_marginBottom="@dimen/space_4"
     android:clickable="true"
-    android:focusable="true">
+    android:focusable="true"
+    android:foreground="?android:attr/selectableItemBackground">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="@dimen/card_padding">
+        android:paddingHorizontal="@dimen/card_padding"
+        android:paddingTop="@dimen/space_16"
+        android:paddingBottom="@dimen/space_12">
 
         <RelativeLayout
             android:layout_width="match_parent"
@@ -33,15 +37,16 @@
                     android:ellipsize="end"
                     android:maxLines="2"
                     android:text="비즈니스 영어 실전"
-                    android:textAppearance="@style/TextAppearance.AIWordBook.Title" />
+                    android:textAppearance="@style/TextAppearance.AIWordBook.Title"
+                    android:textSize="@dimen/text_body_large" />
 
                 <TextView
                     android:id="@+id/tv_vocab_desc"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_6"
+                    android:layout_marginTop="@dimen/space_4"
                     android:ellipsize="end"
-                    android:maxLines="3"
+                    android:maxLines="2"
                     android:text="실제 비즈니스 미팅과 이메일 작성 시 가장 자주 사용되는 실무 영어 표현"
                     android:textAppearance="@style/TextAppearance.AIWordBook.Body.Secondary" />
 
@@ -62,25 +67,23 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_16"
+            android:layout_marginTop="@dimen/space_12"
+            android:gravity="end"
             android:orientation="horizontal">
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_edit"
-                style="@style/Widget.AIWordBook.Button.Secondary"
-                android:layout_width="0dp"
-                android:layout_height="@dimen/button_height"
-                android:layout_weight="1"
-                android:layout_marginEnd="@dimen/space_6"
+                style="@style/Widget.AIWordBook.Button.CardAction"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/card_action_height"
+                android:layout_marginEnd="@dimen/space_8"
                 android:text="수정" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_delete"
-                style="@style/Widget.AIWordBook.Button.Danger"
-                android:layout_width="0dp"
-                android:layout_height="@dimen/button_height"
-                android:layout_weight="1"
-                android:layout_marginStart="@dimen/space_6"
+                style="@style/Widget.AIWordBook.Button.CardAction.Danger"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/card_action_height"
                 android:text="삭제" />
 
         </LinearLayout>

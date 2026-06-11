@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Spacing -->
+    <!-- Spacing: 4dp base scale with a small 2dp/6dp optical step -->
     <dimen name="space_2">2dp</dimen>
     <dimen name="space_4">4dp</dimen>
     <dimen name="space_6">6dp</dimen>
@@ -12,8 +12,9 @@
     <dimen name="space_32">32dp</dimen>
     <dimen name="space_40">40dp</dimen>
     <dimen name="space_48">48dp</dimen>
+    <dimen name="space_64">64dp</dimen>
 
-    <!-- Layout -->
+    <!-- Layout and component sizing -->
     <dimen name="screen_padding">20dp</dimen>
     <dimen name="card_padding">20dp</dimen>
     <dimen name="dialog_padding">24dp</dimen>
@@ -29,20 +30,26 @@
     <dimen name="report_progress_area_height">120dp</dimen>
     <dimen name="report_progress_size">100dp</dimen>
     <dimen name="fab_bottom_offset">88dp</dimen>
+    <dimen name="vocabulary_list_bottom_padding">112dp</dimen>
+    <dimen name="card_action_height">40dp</dimen>
+    <dimen name="card_action_min_width">72dp</dimen>
 
     <!-- Shape -->
-    <dimen name="radius_small">10dp</dimen>
-    <dimen name="radius_medium">14dp</dimen>
+    <dimen name="radius_extra_small">8dp</dimen>
+    <dimen name="radius_small">12dp</dimen>
+    <dimen name="radius_medium">16dp</dimen>
     <dimen name="radius_large">20dp</dimen>
-    <dimen name="radius_pill">24dp</dimen>
+    <dimen name="radius_extra_large">28dp</dimen>
+    <dimen name="radius_pill">999dp</dimen>
     <dimen name="stroke_width">1dp</dimen>
-    <dimen name="card_elevation">1dp</dimen>
+    <dimen name="stroke_width_focused">2dp</dimen>
+    <dimen name="card_elevation">0dp</dimen>
 
     <!-- Typography -->
     <dimen name="text_caption">12sp</dimen>
     <dimen name="text_body">14sp</dimen>
     <dimen name="text_body_large">16sp</dimen>
     <dimen name="text_title">18sp</dimen>
-    <dimen name="text_headline">22sp</dimen>
-    <dimen name="text_display">28sp</dimen>
+    <dimen name="text_headline">24sp</dimen>
+    <dimen name="text_display">32sp</dimen>
 </resources>

@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/app_background"
+    android:background="@drawable/bg_app_background"
     android:fitsSystemWindows="true"
     tools:context=".MainActivity">
 
@@ -80,21 +80,22 @@
                 <androidx.core.widget.NestedScrollView
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:fillViewport="true">
+                    android:clipToPadding="false"
+                    android:fillViewport="true"
+                    android:overScrollMode="never">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:paddingBottom="@dimen/space_24"
-                        android:paddingTop="@dimen/space_12">
+                        android:paddingBottom="@dimen/vocabulary_list_bottom_padding"
+                        android:paddingTop="@dimen/space_16">
 
                         <!-- Search Input Container -->
                         <FrameLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginHorizontal="@dimen/screen_padding"
-                            android:layout_marginTop="@dimen/space_8">
+                            android:layout_marginHorizontal="@dimen/screen_padding">
 
                             <EditText
                                 android:id="@+id/et_search"
@@ -108,6 +109,7 @@
                                 android:maxLines="1"
                                 android:paddingStart="@dimen/space_48"
                                 android:paddingEnd="@dimen/space_16"
+                                android:selectAllOnFocus="false"
                                 android:textColor="@color/app_text_primary" />
 
                             <ImageView
@@ -126,8 +128,8 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginHorizontal="@dimen/screen_padding"
-                            android:layout_marginTop="@dimen/space_24"
-                            android:layout_marginBottom="@dimen/space_12">
+                            android:layout_marginTop="@dimen/space_20"
+                            android:layout_marginBottom="@dimen/space_8">
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -135,7 +137,8 @@
                                 android:layout_alignParentStart="true"
                                 android:layout_centerVertical="true"
                                 android:text="내 단어장"
-                                android:textAppearance="@style/TextAppearance.AIWordBook.Title" />
+                                android:textAppearance="@style/TextAppearance.AIWordBook.Title"
+                                android:textSize="@dimen/text_body_large" />
 
                             <TextView
                                 android:id="@+id/btn_view_all"
@@ -145,10 +148,11 @@
                                 android:layout_centerVertical="true"
                                 android:text="전체보기"
                                 android:textColor="@color/app_primary"
-                                android:textSize="@dimen/text_body"
-                                android:textStyle="bold"
+                                android:textSize="@dimen/text_caption"
                                 android:background="?android:attr/selectableItemBackground"
-                                android:padding="@dimen/space_4" />
+                                android:fontFamily="sans-serif-medium"
+                                android:paddingHorizontal="@dimen/space_8"
+                                android:paddingVertical="@dimen/space_4" />
 
                         </RelativeLayout>
 
@@ -157,6 +161,7 @@
                             android:id="@+id/rv_vocabularies"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:clipToPadding="false"
                             android:nestedScrollingEnabled="false"
                             tools:listitem="@layout/item_vocabulary" />
 
@@ -165,16 +170,18 @@
                             android:id="@+id/layout_empty_state"
                             android:layout_width="match_parent"
                             android:layout_height="@dimen/empty_state_height"
+                            android:layout_marginHorizontal="@dimen/screen_padding"
                             android:gravity="center"
                             android:orientation="vertical"
-                            android:padding="@dimen/space_24"
+                            android:padding="@dimen/space_20"
                             android:visibility="gone">
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="아직 단어장이 없습니다"
-                                android:textAppearance="@style/TextAppearance.AIWordBook.Title" />
+                                android:textAppearance="@style/TextAppearance.AIWordBook.Title"
+                                android:textSize="@dimen/text_body_large" />
 
                             <TextView
                                 android:layout_width="wrap_content"

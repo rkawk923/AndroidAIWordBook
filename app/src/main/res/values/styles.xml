@@ -1,20 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Typography -->
+    <style name="TextAppearance.AIWordBook.Display" parent="TextAppearance.Material3.DisplaySmall">
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textColor">@color/app_text_primary</item>
+        <item name="android:textSize">@dimen/text_display</item>
+    </style>
+
     <style name="TextAppearance.AIWordBook.Headline" parent="TextAppearance.Material3.HeadlineSmall">
+        <item name="android:fontFamily">sans-serif-medium</item>
         <item name="android:textColor">@color/app_text_primary</item>
         <item name="android:textSize">@dimen/text_headline</item>
-        <item name="android:textStyle">bold</item>
     </style>
 
     <style name="TextAppearance.AIWordBook.Title" parent="TextAppearance.Material3.TitleMedium">
+        <item name="android:fontFamily">sans-serif-medium</item>
         <item name="android:textColor">@color/app_text_primary</item>
         <item name="android:textSize">@dimen/text_title</item>
-        <item name="android:textStyle">bold</item>
     </style>
 
     <style name="TextAppearance.AIWordBook.Body" parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:fontFamily">sans-serif</item>
         <item name="android:textColor">@color/app_text_primary</item>
         <item name="android:textSize">@dimen/text_body</item>
+    </style>
+
+    <style name="TextAppearance.AIWordBook.Body.Large" parent="TextAppearance.Material3.BodyLarge">
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textColor">@color/app_text_primary</item>
+        <item name="android:textSize">@dimen/text_body_large</item>
     </style>
 
     <style name="TextAppearance.AIWordBook.Body.Secondary" parent="TextAppearance.AIWordBook.Body">
@@ -22,63 +36,90 @@
     </style>
 
     <style name="TextAppearance.AIWordBook.Caption" parent="TextAppearance.Material3.BodySmall">
+        <item name="android:fontFamily">sans-serif</item>
         <item name="android:textColor">@color/app_text_tertiary</item>
         <item name="android:textSize">@dimen/text_caption</item>
     </style>
 
     <style name="TextAppearance.AIWordBook.Label" parent="TextAppearance.Material3.LabelLarge">
+        <item name="android:fontFamily">sans-serif-medium</item>
         <item name="android:textColor">@color/app_text_secondary</item>
         <item name="android:textSize">@dimen/text_body</item>
-        <item name="android:textStyle">bold</item>
     </style>
 
     <style name="TextAppearance.AIWordBook.Button" parent="TextAppearance.Material3.LabelLarge">
+        <item name="android:fontFamily">sans-serif-medium</item>
         <item name="android:textSize">@dimen/text_body</item>
-        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">false</item>
     </style>
 
-    <style name="Widget.AIWordBook.Card" parent="Widget.Material3.CardView.Elevated">
+    <!-- Cards -->
+    <style name="Widget.AIWordBook.Card" parent="Widget.Material3.CardView.Filled">
         <item name="cardBackgroundColor">@color/app_surface</item>
         <item name="cardCornerRadius">@dimen/radius_large</item>
         <item name="cardElevation">@dimen/card_elevation</item>
-        <item name="strokeColor">@color/app_border</item>
-        <item name="strokeWidth">@dimen/stroke_width</item>
+        <item name="strokeWidth">0dp</item>
+        <item name="rippleColor">@color/app_ripple_dark</item>
     </style>
 
     <style name="Widget.AIWordBook.Card.Highlight" parent="Widget.AIWordBook.Card">
         <item name="cardBackgroundColor">@color/app_surface_blue</item>
         <item name="strokeColor">@color/app_primary_soft</item>
+        <item name="strokeWidth">@dimen/stroke_width</item>
     </style>
 
+    <!-- Buttons -->
     <style name="Widget.AIWordBook.Button.Primary" parent="Widget.Material3.Button">
         <item name="android:minHeight">@dimen/button_height</item>
-        <item name="android:textColor">@color/app_surface</item>
+        <item name="android:textColor">@color/app_text_on_primary</item>
         <item name="backgroundTint">@color/app_primary</item>
         <item name="cornerRadius">@dimen/radius_medium</item>
+        <item name="elevation">0dp</item>
+        <item name="rippleColor">@color/app_ripple_light</item>
         <item name="android:textAppearance">@style/TextAppearance.AIWordBook.Button</item>
     </style>
 
-    <style name="Widget.AIWordBook.Button.Secondary" parent="Widget.Material3.Button.OutlinedButton">
+    <style name="Widget.AIWordBook.Button.Secondary" parent="Widget.Material3.Button.TonalButton">
         <item name="android:minHeight">@dimen/button_height</item>
         <item name="android:textColor">@color/app_text_secondary</item>
-        <item name="backgroundTint">@color/app_surface</item>
+        <item name="backgroundTint">@color/app_surface_subtle</item>
         <item name="cornerRadius">@dimen/radius_medium</item>
-        <item name="strokeColor">@color/app_border</item>
-        <item name="strokeWidth">@dimen/stroke_width</item>
+        <item name="elevation">0dp</item>
+        <item name="rippleColor">@color/app_ripple_dark</item>
         <item name="android:textAppearance">@style/TextAppearance.AIWordBook.Button</item>
     </style>
 
     <style name="Widget.AIWordBook.Button.Danger" parent="Widget.AIWordBook.Button.Secondary">
         <item name="android:textColor">@color/app_danger</item>
+        <item name="backgroundTint">@color/app_danger_soft</item>
     </style>
 
+    <style name="Widget.AIWordBook.Button.CardAction" parent="Widget.AIWordBook.Button.Secondary">
+        <item name="android:minHeight">@dimen/card_action_height</item>
+        <item name="android:minWidth">@dimen/card_action_min_width</item>
+        <item name="android:paddingLeft">@dimen/space_12</item>
+        <item name="android:paddingRight">@dimen/space_12</item>
+        <item name="android:textSize">@dimen/text_caption</item>
+        <item name="cornerRadius">@dimen/radius_small</item>
+    </style>
+
+    <style name="Widget.AIWordBook.Button.CardAction.Danger" parent="Widget.AIWordBook.Button.CardAction">
+        <item name="android:textColor">@color/app_danger</item>
+        <item name="backgroundTint">@color/app_danger_soft</item>
+    </style>
+
+    <!-- Inputs -->
     <style name="Widget.AIWordBook.TextInputLayout" parent="Widget.Material3.TextInputLayout.OutlinedBox">
         <item name="boxBackgroundColor">@color/app_surface</item>
         <item name="boxCornerRadiusBottomEnd">@dimen/radius_medium</item>
         <item name="boxCornerRadiusBottomStart">@dimen/radius_medium</item>
         <item name="boxCornerRadiusTopEnd">@dimen/radius_medium</item>
         <item name="boxCornerRadiusTopStart">@dimen/radius_medium</item>
-        <item name="boxStrokeColor">@color/app_primary</item>
+        <item name="boxStrokeWidth">@dimen/stroke_width</item>
+        <item name="boxStrokeWidthFocused">@dimen/stroke_width_focused</item>
+        <item name="boxStrokeErrorColor">@color/app_danger</item>
+        <item name="cursorColor">@color/app_primary</item>
+        <item name="errorTextColor">@color/app_danger</item>
         <item name="hintTextColor">@color/app_text_secondary</item>
     </style>
 </resources>
