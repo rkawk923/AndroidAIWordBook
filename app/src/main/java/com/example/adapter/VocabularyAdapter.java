@@ -3,6 +3,7 @@ package com.example.adapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -28,6 +29,7 @@ public class VocabularyAdapter extends RecyclerView.Adapter<VocabularyAdapter.Vo
      */
     public interface OnVocabularyClickListener {
         void onItemClick(VocabularyEntity vocabulary); // 단어장 클릭 시 상세 보기로
+        void onFavoriteClick(VocabularyEntity vocabulary); // 단어장 즐겨찾기 전환
         void onEditClick(VocabularyEntity vocabulary); // 단어장 수정 버튼 클릭
         void onDeleteClick(VocabularyEntity vocabulary); // 단어장 삭제 버튼 클릭
     }
@@ -70,6 +72,7 @@ public class VocabularyAdapter extends RecyclerView.Adapter<VocabularyAdapter.Vo
 
         private final TextView tvName;
         private final TextView tvDesc;
+        private final ImageButton btnFavorite;
         private final View btnEdit;
         private final View btnDelete;
 
@@ -77,6 +80,7 @@ public class VocabularyAdapter extends RecyclerView.Adapter<VocabularyAdapter.Vo
             super(itemView);
             tvName = itemView.findViewById(R.id.tv_vocab_name);
             tvDesc = itemView.findViewById(R.id.tv_vocab_desc);
+            btnFavorite = itemView.findViewById(R.id.iv_favorite);
             btnEdit = itemView.findViewById(R.id.btn_edit);
             btnDelete = itemView.findViewById(R.id.btn_delete);
         }
@@ -84,11 +88,18 @@ public class VocabularyAdapter extends RecyclerView.Adapter<VocabularyAdapter.Vo
         public void bind(final VocabularyEntity item, final OnVocabularyClickListener listener) {
             tvName.setText(item.getName());
             tvDesc.setText(item.getDescription());
+            bindFavoriteState(item);
 
             // 카드 영역 전체 클릭 시 콜백
             itemView.setOnClickListener(v -> {
                 if (listener != null) {
                     listener.onItemClick(item);
+                }
+            });
+
+            btnFavorite.setOnClickListener(v -> {
+                if (listener != null) {
+                    listener.onFavoriteClick(item);
                 }
             });
 
@@ -105,6 +116,19 @@ public class VocabularyAdapter extends RecyclerView.Adapter<VocabularyAdapter.Vo
                     listener.onDeleteClick(item);
                 }
             });
+        }
+
+        private void bindFavoriteState(VocabularyEntity item) {
+            btnFavorite.setImageResource(
+                    item.isFavorite()
+                            ? R.drawable.ic_heart_filled
+                            : R.drawable.ic_heart_outline
+            );
+            btnFavorite.setContentDescription(itemView.getContext().getString(
+                    item.isFavorite()
+                            ? R.string.remove_from_favorites
+                            : R.string.add_to_favorites
+            ));
         }
     }
 }

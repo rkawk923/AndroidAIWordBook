@@ -55,8 +55,8 @@
                 android:layout_centerVertical="true"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:padding="@dimen/space_12"
-                android:src="@android:drawable/btn_star_big_off"
-                android:contentDescription="북마크" />
+                android:src="@drawable/ic_heart_outline"
+                android:contentDescription="@string/add_to_favorites" />
 
         </RelativeLayout>
 
@@ -138,6 +138,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="@dimen/space_12"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?android:attr/selectableItemBackground"
                     android:minHeight="@dimen/study_card_min_height">
 
                     <LinearLayout
@@ -153,7 +156,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginBottom="@dimen/space_12"
-                            android:text="영단어"
+                            android:text="@string/study_word_label"
                             android:textAppearance="@style/TextAppearance.AIWordBook.Caption" />
 
                         <TextView
@@ -163,9 +166,28 @@
                             android:breakStrategy="balanced"
                             android:gravity="center"
                             android:hyphenationFrequency="none"
-                            android:maxLines="8"
                             android:text="Word"
                             android:textAppearance="@style/TextAppearance.AIWordBook.Display" />
+
+                        <ImageView
+                            android:id="@+id/iv_word_reveal_icon"
+                            android:layout_width="@dimen/space_32"
+                            android:layout_height="@dimen/space_32"
+                            android:contentDescription="@string/study_show_word"
+                            android:src="@android:drawable/ic_menu_view"
+                            android:tint="@color/app_primary"
+                            android:visibility="gone" />
+
+                        <TextView
+                            android:id="@+id/tv_word_reveal_hint"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/space_12"
+                            android:fontFamily="sans-serif-medium"
+                            android:text="@string/study_show_word"
+                            android:textColor="@color/app_primary"
+                            android:textSize="@dimen/text_body_large"
+                            android:visibility="gone" />
 
                     </LinearLayout>
 
@@ -206,7 +228,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="@dimen/space_12"
                             android:fontFamily="sans-serif-medium"
-                            android:text="눌러서 뜻 확인"
+                            android:text="@string/study_show_meaning"
                             android:textColor="@color/app_primary"
                             android:textSize="@dimen/text_body_large" />
 
@@ -217,7 +239,6 @@
                             android:breakStrategy="balanced"
                             android:gravity="center"
                             android:hyphenationFrequency="none"
-                            android:maxLines="10"
                             android:text="뜻"
                             android:textAppearance="@style/TextAppearance.AIWordBook.Headline"
                             android:textColor="@color/app_primary"

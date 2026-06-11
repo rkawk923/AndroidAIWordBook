@@ -9,9 +9,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import com.example.database.AppDatabase;
+import com.example.database.VocabularyDao;
 import com.example.database.WordDao;
+import com.example.model.VocabularyEntity;
 import com.example.model.WordEntity;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
@@ -33,28 +36,32 @@ public class VocabularyDetailActivity extends AppCompatActivity {
     private String vocabularyName;
 
     private AppDatabase db;
+    private VocabularyDao vocabularyDao;
     private WordDao wordDao;
     private ExecutorService dbExecutor;
+    private VocabularyEntity currentVocabulary;
 
     private List<WordEntity> activeWordList = new ArrayList<>();
 
     // 플래시 카드 학습 상태 및 UI 요소들
     private int currentStudyIndex = 0;
-    private boolean isMeaningRevealed = false;
+    private boolean isWordVisible = true;
+    private boolean isMeaningVisible = false;
 
     private TextView tvStudyProgress;
     private ProgressBar pbStudy;
     private TextView tvStudyWord;
+    private ImageView ivWordRevealIcon;
+    private TextView tvWordRevealHint;
     private TextView tvStudyMeaning;
+    private MaterialCardView cardWordDisplay;
     private MaterialCardView cardMeaningDisplay;
-    private View layoutRevealContainer;
     private ImageView ivRevealIcon;
     private TextView tvRevealHint;
 
     private MaterialButton btnStudyPrev;
     private MaterialButton btnStudyNext;
     private ImageView btnBookmark;
-    private boolean isBookmarked = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,6 +76,7 @@ public class VocabularyDetailActivity extends AppCompatActivity {
         }
 
         db = AppDatabase.getInstance(this);
+        vocabularyDao = db.vocabularyDao();
         wordDao = db.wordDao();
         dbExecutor = Executors.newSingleThreadExecutor();
 
@@ -79,39 +87,69 @@ public class VocabularyDetailActivity extends AppCompatActivity {
         findViewById(R.id.btn_detail_back).setOnClickListener(v -> finish());
 
         btnBookmark = findViewById(R.id.btn_detail_bookmark);
-        btnBookmark.setOnClickListener(v -> {
-            isBookmarked = !isBookmarked;
-            if (isBookmarked) {
-                btnBookmark.setImageResource(android.R.drawable.btn_star_big_on);
-                Toast.makeText(VocabularyDetailActivity.this, "단어장이 즐겨찾기에 등록되었습니다.", Toast.LENGTH_SHORT).show();
-            } else {
-                btnBookmark.setImageResource(android.R.drawable.btn_star_big_off);
-                Toast.makeText(VocabularyDetailActivity.this, "즐겨찾기 해제되었습니다.", Toast.LENGTH_SHORT).show();
-            }
-        });
+        btnBookmark.setEnabled(false);
+        btnBookmark.setOnClickListener(v -> toggleFavorite());
 
         // 카드 컴포넌트들 맵핑
         tvStudyProgress = findViewById(R.id.tv_study_progress);
         pbStudy = findViewById(R.id.pb_study);
+        cardWordDisplay = findViewById(R.id.card_word_display);
         tvStudyWord = findViewById(R.id.tv_study_word);
+        ivWordRevealIcon = findViewById(R.id.iv_word_reveal_icon);
+        tvWordRevealHint = findViewById(R.id.tv_word_reveal_hint);
         tvStudyMeaning = findViewById(R.id.tv_study_meaning);
         cardMeaningDisplay = findViewById(R.id.card_meaning_display);
-        layoutRevealContainer = findViewById(R.id.layout_reveal_container);
         ivRevealIcon = findViewById(R.id.iv_reveal_icon);
         tvRevealHint = findViewById(R.id.tv_reveal_hint);
 
         btnStudyPrev = findViewById(R.id.btn_study_prev);
         btnStudyNext = findViewById(R.id.btn_study_next);
 
-        // 탭하여 뜻 보기 설정
-        cardMeaningDisplay.setOnClickListener(v -> revealMeaning());
+        cardWordDisplay.setOnClickListener(v -> toggleWordVisibility());
+        cardMeaningDisplay.setOnClickListener(v -> toggleMeaningVisibility());
 
         // 이전/다음
         btnStudyPrev.setOnClickListener(v -> navigateStudyCard(-1));
         btnStudyNext.setOnClickListener(v -> navigateStudyCard(1));
 
-        // 단어 로드 실행
+        // 단어장 상태와 단어 목록 로드
+        loadFavoriteState();
         loadVocabularyWords();
+    }
+
+    private void loadFavoriteState() {
+        if (vocabularyId == -1) return;
+
+        dbExecutor.execute(() -> {
+            final VocabularyEntity vocabulary = vocabularyDao.getVocabularyById(vocabularyId);
+            runOnUiThread(() -> {
+                currentVocabulary = vocabulary;
+                btnBookmark.setEnabled(currentVocabulary != null);
+                updateFavoriteIcon();
+            });
+        });
+    }
+
+    private void updateFavoriteIcon() {
+        boolean isFavorite = currentVocabulary != null && currentVocabulary.isFavorite();
+        btnBookmark.setImageResource(
+                isFavorite ? R.drawable.ic_heart_filled : R.drawable.ic_heart_outline
+        );
+        btnBookmark.setContentDescription(getString(
+                isFavorite ? R.string.remove_from_favorites : R.string.add_to_favorites
+        ));
+    }
+
+    private void toggleFavorite() {
+        if (currentVocabulary == null) return;
+
+        boolean newFavoriteState = !currentVocabulary.isFavorite();
+        currentVocabulary.setFavorite(newFavoriteState);
+        updateFavoriteIcon();
+
+        dbExecutor.execute(() ->
+                vocabularyDao.updateFavorite(vocabularyId, newFavoriteState)
+        );
     }
 
     private void loadVocabularyWords() {
@@ -142,7 +180,7 @@ public class VocabularyDetailActivity extends AppCompatActivity {
             currentStudyIndex = 0;
         }
 
-        isMeaningRevealed = false;
+        resetCardVisibilityState();
         bindWordToFlashcard();
     }
 
@@ -159,17 +197,11 @@ public class VocabularyDetailActivity extends AppCompatActivity {
         int percent = (int) (((float) (currentStudyIndex + 1) / activeWordList.size()) * 100);
         pbStudy.setProgress(percent);
 
-        // 앞 단어 매핑
+        // 현재 단어와 뜻 데이터 매핑
         tvStudyWord.setText(word.getWord());
-
-        // 뜻 영역 복구
-        isMeaningRevealed = false;
         tvStudyMeaning.setText(word.getMeaning());
-        tvStudyMeaning.setVisibility(View.GONE);
-
-        ivRevealIcon.setVisibility(View.VISIBLE);
-        tvRevealHint.setVisibility(View.VISIBLE);
-        cardMeaningDisplay.setCardBackgroundColor(android.graphics.Color.parseColor("#eeedf3"));
+        updateWordCardVisibility();
+        updateMeaningCardVisibility();
 
         // SharedPreferences에 최신 단어장 및 진행 진척도 저장
         SharedPreferences prefs = getSharedPreferences("StudyPrefs", MODE_PRIVATE);
@@ -181,14 +213,45 @@ public class VocabularyDetailActivity extends AppCompatActivity {
                 .apply();
     }
 
-    private void revealMeaning() {
-        if (isMeaningRevealed) return;
-        isMeaningRevealed = true;
+    private void toggleWordVisibility() {
+        isWordVisible = !isWordVisible;
+        updateWordCardVisibility();
+    }
 
-        tvStudyMeaning.setVisibility(View.VISIBLE);
-        ivRevealIcon.setVisibility(View.GONE);
-        tvRevealHint.setVisibility(View.GONE);
-        cardMeaningDisplay.setCardBackgroundColor(android.graphics.Color.parseColor("#ffffff"));
+    private void toggleMeaningVisibility() {
+        isMeaningVisible = !isMeaningVisible;
+        updateMeaningCardVisibility();
+    }
+
+    private void resetCardVisibilityState() {
+        isWordVisible = true;
+        isMeaningVisible = false;
+    }
+
+    private void updateWordCardVisibility() {
+        tvStudyWord.setVisibility(isWordVisible ? View.VISIBLE : View.GONE);
+        ivWordRevealIcon.setVisibility(isWordVisible ? View.GONE : View.VISIBLE);
+        tvWordRevealHint.setVisibility(isWordVisible ? View.GONE : View.VISIBLE);
+        cardWordDisplay.setCardBackgroundColor(ContextCompat.getColor(
+                this,
+                isWordVisible ? R.color.app_surface : R.color.app_surface_subtle
+        ));
+        cardWordDisplay.setContentDescription(getString(
+                isWordVisible ? R.string.study_hide_word : R.string.study_show_word
+        ));
+    }
+
+    private void updateMeaningCardVisibility() {
+        tvStudyMeaning.setVisibility(isMeaningVisible ? View.VISIBLE : View.GONE);
+        ivRevealIcon.setVisibility(isMeaningVisible ? View.GONE : View.VISIBLE);
+        tvRevealHint.setVisibility(isMeaningVisible ? View.GONE : View.VISIBLE);
+        cardMeaningDisplay.setCardBackgroundColor(ContextCompat.getColor(
+                this,
+                isMeaningVisible ? R.color.app_surface : R.color.app_surface_subtle
+        ));
+        cardMeaningDisplay.setContentDescription(getString(
+                isMeaningVisible ? R.string.study_hide_meaning : R.string.study_show_meaning
+        ));
     }
 
     private void navigateStudyCard(int action) {
@@ -206,6 +269,7 @@ public class VocabularyDetailActivity extends AppCompatActivity {
         }
 
         currentStudyIndex = targetIndex;
+        resetCardVisibilityState();
         bindWordToFlashcard();
     }
 

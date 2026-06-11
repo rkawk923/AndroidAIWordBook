@@ -16,8 +16,8 @@ import java.util.List;
 @Dao
 public interface VocabularyDao {
 
-    // 전체 단어장 목록을 불러오는 쿼리 (최신 등록 순 혹은 알파벳 순으로 가져옵니다)
-    @Query("SELECT * FROM vocabulary ORDER BY id DESC")
+    // 즐겨찾기 단어장을 먼저 표시하고, 각 그룹 안에서는 기존 최신 등록 순서를 유지합니다.
+    @Query("SELECT * FROM vocabulary ORDER BY is_favorite DESC, id DESC")
     List<VocabularyEntity> getAllVocabularies();
 
     // ID로 특정 단어장을 조회하는 쿼리
@@ -25,8 +25,11 @@ public interface VocabularyDao {
     VocabularyEntity getVocabularyById(int id);
 
     // 검색어가 단어장 이름에 포함되어 있는지 필터링하는 쿼리
-    @Query("SELECT * FROM vocabulary WHERE name LIKE :searchQuery ORDER BY id DESC")
+    @Query("SELECT * FROM vocabulary WHERE name LIKE :searchQuery ORDER BY is_favorite DESC, id DESC")
     List<VocabularyEntity> searchVocabularies(String searchQuery);
+
+    @Query("UPDATE vocabulary SET is_favorite = :isFavorite WHERE id = :vocabularyId")
+    void updateFavorite(int vocabularyId, boolean isFavorite);
 
     // 단어장을 새로 추가하는 메소드 (자동 생성된 id가 반환됩니다)
     @Insert

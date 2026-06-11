@@ -3,12 +3,15 @@ package com.example;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -31,10 +34,12 @@ import com.example.model.WordEntity;
 import com.example.service.GeminiHelper;
 import com.example.service.PdfWordExtractor;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -64,6 +69,7 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
     private View tabContainerVocab;
     private RecyclerView rvVocabularies;
     private VocabularyAdapter adapter;
+    private List<VocabularyEntity> currentVocabularyList = new ArrayList<>();
     private View layoutEmptyState;
     private EditText etSearch;
 
@@ -112,9 +118,6 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
         rvVocabularies.setLayoutManager(new LinearLayoutManager(this));
         adapter = new VocabularyAdapter(this);
         rvVocabularies.setAdapter(adapter);
-
-        // FAB은 단어 입력 및 편집 페이지로 바로 전환해 신규 단어장 모드로 설정
-        findViewById(R.id.fab_add_vocabulary).setOnClickListener(v -> switchTab(R.id.nav_add));
 
         // 실시간 이름 검색 연동
         etSearch.addTextChangedListener(new TextWatcher() {
@@ -167,10 +170,7 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
         // PDF 영단어 추출 및 업로드 연동 클릭
         findViewById(R.id.btn_pdf_extract).setOnClickListener(v -> triggerPdfSelection());
 
-        // 도움말 버튼 토스트
-        findViewById(R.id.btn_add_help).setOnClickListener(v -> {
-            Toast.makeText(this, "AI 스마트 어시스턴트를 활용하면 PDF에서 기출 단어들을 고속 추출하거나 단어의 뜻을 자동으로 매핑할 수 있습니다.", Toast.LENGTH_LONG).show();
-        });
+        findViewById(R.id.btn_add_help).setOnClickListener(v -> showHelpDialog());
 
         // 첫 기동 샘플 단어 점검 및 주입
         checkAndPrepopulateSampleData();
@@ -186,6 +186,29 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
         bottomNavigation.setSelectedItemId(R.id.nav_vocab);
     }
 
+    private void showHelpDialog() {
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_help, null);
+        AlertDialog dialog = new MaterialAlertDialogBuilder(this)
+                .setView(dialogView)
+                .create();
+
+        MaterialButton confirmButton = dialogView.findViewById(R.id.btn_help_confirm);
+        confirmButton.setOnClickListener(v -> dialog.dismiss());
+
+        dialog.setCancelable(false);
+        dialog.setCanceledOnTouchOutside(false);
+        dialog.show();
+
+        Window window = dialog.getWindow();
+        if (window != null) {
+            window.setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
+            window.setLayout(
+                    WindowManager.LayoutParams.MATCH_PARENT,
+                    WindowManager.LayoutParams.WRAP_CONTENT
+            );
+        }
+    }
+
     /**
      * 지정된 탭 아이템 ID에 맞추어 화면 레이아웃들의 시각적 가시성 전환
      */
@@ -194,7 +217,6 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
             tabContainerVocab.setVisibility(View.VISIBLE);
             tabContainerLearn.setVisibility(View.GONE);
             tabContainerAdd.setVisibility(View.GONE);
-            findViewById(R.id.fab_add_vocabulary).setVisibility(View.VISIBLE);
             // 메인 툴바 텍스트 복구
             TextView tvTitle = findViewById(R.id.tv_main_title);
             tvTitle.setText("AI 스마트 단어장");
@@ -203,7 +225,6 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
             tabContainerVocab.setVisibility(View.GONE);
             tabContainerLearn.setVisibility(View.VISIBLE);
             tabContainerAdd.setVisibility(View.GONE);
-            findViewById(R.id.fab_add_vocabulary).setVisibility(View.GONE);
             // 메인 툴바 타이틀
             TextView tvTitle = findViewById(R.id.tv_main_title);
             tvTitle.setText("나의 실시간 학습");
@@ -212,7 +233,6 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
             tabContainerVocab.setVisibility(View.GONE);
             tabContainerLearn.setVisibility(View.GONE);
             tabContainerAdd.setVisibility(View.VISIBLE);
-            findViewById(R.id.fab_add_vocabulary).setVisibility(View.GONE);
             // 메인 툴바 타이틀
             TextView tvTitle = findViewById(R.id.tv_main_title);
             tvTitle.setText("단어장 편집실");
@@ -266,13 +286,40 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
 
     private void updateUI(List<VocabularyEntity> list) {
         if (list == null || list.isEmpty()) {
+            currentVocabularyList = new ArrayList<>();
             layoutEmptyState.setVisibility(View.VISIBLE);
             rvVocabularies.setVisibility(View.GONE);
         } else {
+            currentVocabularyList = sortVocabularyList(list);
             layoutEmptyState.setVisibility(View.GONE);
             rvVocabularies.setVisibility(View.VISIBLE);
-            adapter.setVocabularyList(list);
+            adapter.setVocabularyList(currentVocabularyList);
         }
+    }
+
+    private List<VocabularyEntity> sortVocabularyList(List<VocabularyEntity> source) {
+        List<VocabularyEntity> sortedList = new ArrayList<>(source);
+        sortedList.sort(
+                Comparator.comparing(VocabularyEntity::isFavorite)
+                        .reversed()
+                        .thenComparing(
+                                VocabularyEntity::getId,
+                                Comparator.reverseOrder()
+                        )
+        );
+        return sortedList;
+    }
+
+    private void toggleFavorite(VocabularyEntity vocabulary) {
+        boolean newFavoriteState = !vocabulary.isFavorite();
+        vocabulary.setFavorite(newFavoriteState);
+
+        currentVocabularyList = sortVocabularyList(currentVocabularyList);
+        adapter.setVocabularyList(currentVocabularyList);
+
+        dbExecutor.execute(() ->
+                vocabularyDao.updateFavorite(vocabulary.getId(), newFavoriteState)
+        );
     }
 
     // --- TAB 2: 학습 진행 통계 리포트 로드 실무 (사용자 구체적 편의 개선) ---
@@ -602,6 +649,11 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
         intent.putExtra("VOCAB_ID", vocabulary.getId());
         intent.putExtra("VOCAB_NAME", vocabulary.getName());
         startActivity(intent);
+    }
+
+    @Override
+    public void onFavoriteClick(VocabularyEntity vocabulary) {
+        toggleFavorite(vocabulary);
     }
 
     @Override

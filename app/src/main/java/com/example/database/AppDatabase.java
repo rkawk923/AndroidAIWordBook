@@ -2,9 +2,12 @@ package com.example.database;
 
 import android.content.Context;
 
+import androidx.annotation.NonNull;
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
+import androidx.room.migration.Migration;
+import androidx.sqlite.db.SupportSQLiteDatabase;
 
 import com.example.model.VocabularyEntity;
 import com.example.model.WordEntity;
@@ -14,10 +17,20 @@ import com.example.model.WordEntity;
  * 버전 정보 및 보관할 엔티티 스키마들을 등록합니다.
  * 싱글톤 패턴(Singleton)으로 리소스를 효율적으로 재활용할 수 있게 설계하였습니다.
  */
-@Database(entities = {VocabularyEntity.class, WordEntity.class}, version = 1, exportSchema = false)
+@Database(entities = {VocabularyEntity.class, WordEntity.class}, version = 2, exportSchema = false)
 public abstract class AppDatabase extends RoomDatabase {
 
     private static volatile AppDatabase INSTANCE;
+
+    private static final Migration MIGRATION_1_2 = new Migration(1, 2) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL(
+                    "ALTER TABLE vocabulary "
+                            + "ADD COLUMN is_favorite INTEGER NOT NULL DEFAULT 0"
+            );
+        }
+    };
 
     // 각각의 DAO 인터페이스의 추상 메소드 구현체는 Room에 의해 자동 빌드됩니다.
     public abstract VocabularyDao vocabularyDao();
@@ -35,7 +48,7 @@ public abstract class AppDatabase extends RoomDatabase {
                             AppDatabase.class,
                             "vocabulary_book_database"
                     )
-                    .fallbackToDestructiveMigration() // 스키마 변경 시 이전 버전을 삭제하고 재생성
+                    .addMigrations(MIGRATION_1_2)
                     .build();
                 }
             }

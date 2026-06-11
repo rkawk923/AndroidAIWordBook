@@ -20,6 +20,9 @@ public class VocabularyEntity {
     @ColumnInfo(name = "description")
     private String description;
 
+    @ColumnInfo(name = "is_favorite", defaultValue = "0")
+    private boolean favorite = false;
+
     // Room과 코드 사용을 위한 생성자
     public VocabularyEntity(String name, String description) {
         this.name = name;
@@ -53,5 +56,13 @@ public class VocabularyEntity {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public boolean isFavorite() {
+        return favorite;
+    }
+
+    public void setFavorite(boolean favorite) {
+        this.favorite = favorite;
     }
 }

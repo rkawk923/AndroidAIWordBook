@@ -28,6 +28,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_toStartOf="@id/iv_favorite"
+                android:layout_marginEnd="@dimen/space_8"
                 android:orientation="vertical">
 
                 <TextView
@@ -52,15 +53,16 @@
 
             </LinearLayout>
 
-            <ImageView
+            <ImageButton
                 android:id="@+id/iv_favorite"
-                android:layout_width="@dimen/space_24"
-                android:layout_height="@dimen/space_24"
+                android:layout_width="@dimen/touch_target"
+                android:layout_height="@dimen/touch_target"
                 android:layout_alignParentEnd="true"
                 android:layout_alignParentTop="true"
-                android:src="@android:drawable/btn_star_big_off"
-                android:contentDescription="즐겨찾기"
-                android:visibility="gone" />
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/add_to_favorites"
+                android:padding="@dimen/space_12"
+                android:src="@drawable/ic_heart_outline" />
 
         </RelativeLayout>
 
