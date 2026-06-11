@@ -73,6 +73,13 @@
         <item name="cardCornerRadius">@dimen/radius_medium</item>
     </style>
 
+    <style name="Widget.AIWordBook.Card.Reveal" parent="Widget.AIWordBook.Card">
+        <item name="cardBackgroundColor">@color/app_surface_subtle</item>
+        <item name="strokeColor">@color/app_border</item>
+        <item name="strokeWidth">@dimen/stroke_width</item>
+        <item name="rippleColor">@color/app_ripple_dark</item>
+    </style>
+
     <!-- Buttons -->
     <style name="Widget.AIWordBook.Button.Primary" parent="Widget.Material3.Button">
         <item name="android:minHeight">@dimen/button_height</item>

@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/app_background"
+    android:background="@drawable/bg_app_background"
     android:fitsSystemWindows="true"
     tools:context=".VocabularyDetailActivity">
 
@@ -72,7 +72,9 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
+            android:clipToPadding="false"
             android:fillViewport="true"
+            android:overScrollMode="never"
             android:visibility="visible">
 
             <LinearLayout
@@ -80,165 +82,177 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:padding="@dimen/screen_padding"
-                android:paddingBottom="@dimen/space_24">
+                android:paddingBottom="@dimen/space_32">
 
-            <!-- Progress Header -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="bottom"
-                android:layout_marginBottom="@dimen/space_8">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="학습 진행도"
-                    android:textColor="@color/app_text_secondary"
-                    android:textSize="@dimen/text_body"
-                    android:textStyle="bold" />
-
-                <View
-                    android:layout_width="0dp"
-                    android:layout_height="@dimen/stroke_width"
-                    android:layout_weight="1" />
-
-                <TextView
-                    android:id="@+id/tv_study_progress"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0 / 0"
-                    android:textColor="@color/app_primary"
-                    android:textSize="@dimen/text_body"
-                    android:textStyle="bold" />
-
-            </LinearLayout>
-
-            <!-- Custom Progress Bar -->
-            <ProgressBar
-                android:id="@+id/pb_study"
-                style="@android:style/Widget.ProgressBar.Horizontal"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/space_8"
-                android:layout_marginBottom="@dimen/space_24"
-                android:progressDrawable="@drawable/bg_progress_horizontal"
-                android:max="100"
-                android:progress="0" />
-
-            <!-- Word Card Container -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/card_word_display"
-                style="@style/Widget.AIWordBook.Card"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/study_card_height"
-                android:layout_marginBottom="@dimen/space_16">
-
+                <!-- Progress -->
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:gravity="center"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="@dimen/space_20"
                     android:orientation="vertical">
 
-                    <TextView
-                        android:id="@+id/tv_study_word"
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:gravity="center"
-                        android:maxLines="4"
-                        android:paddingHorizontal="@dimen/space_16"
-                        android:text="Word"
-                        android:textColor="@color/app_text_primary"
-                        android:textSize="@dimen/text_display"
-                        android:textStyle="bold" />
+                        android:layout_marginBottom="@dimen/space_8"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="학습 진행"
+                            android:textAppearance="@style/TextAppearance.AIWordBook.Label" />
+
+                        <View
+                            android:layout_width="0dp"
+                            android:layout_height="@dimen/stroke_width"
+                            android:layout_weight="1" />
+
+                        <TextView
+                            android:id="@+id/tv_study_progress"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="sans-serif-medium"
+                            android:text="0 / 0"
+                            android:textColor="@color/app_primary"
+                            android:textSize="@dimen/text_body" />
+
+                    </LinearLayout>
+
+                    <ProgressBar
+                        android:id="@+id/pb_study"
+                        style="@android:style/Widget.ProgressBar.Horizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/space_8"
+                        android:max="100"
+                        android:progress="0"
+                        android:progressDrawable="@drawable/bg_progress_horizontal" />
 
                 </LinearLayout>
 
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Meaning Hide/Show Interactive Card -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/card_meaning_display"
-                style="@style/Widget.AIWordBook.Card"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/study_card_height"
-                app:cardBackgroundColor="@color/app_surface_subtle"
-                android:clickable="true"
-                android:focusable="true"
-                android:foreground="?android:attr/selectableItemBackground">
-
-                <LinearLayout
-                    android:id="@+id/layout_reveal_container"
+                <!-- Word card -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/card_word_display"
+                    style="@style/Widget.AIWordBook.Card"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:gravity="center"
-                    android:orientation="vertical"
-                    android:padding="@dimen/card_padding">
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="@dimen/space_12"
+                    android:minHeight="@dimen/study_card_min_height">
 
-                    <ImageView
-                        android:id="@+id/iv_reveal_icon"
-                        android:layout_width="@dimen/space_32"
-                        android:layout_height="@dimen/space_32"
-                        android:src="@android:drawable/ic_menu_view"
-                        android:tint="@color/app_text_tertiary"
-                        android:contentDescription="뜻 보기" />
-
-                    <TextView
-                        android:id="@+id/tv_reveal_hint"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_8"
-                        android:text="탭하여 뜻 보기"
-                        android:textColor="@color/app_text_secondary"
-                        android:textSize="@dimen/text_body_large"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/tv_study_meaning"
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="center"
-                        android:maxLines="4"
-                        android:text="뜻"
-                        android:textColor="@color/app_primary"
-                        android:textSize="@dimen/text_headline"
-                        android:textStyle="bold"
-                        android:visibility="gone" />
+                        android:minHeight="@dimen/study_card_min_height"
+                        android:orientation="vertical"
+                        android:paddingHorizontal="@dimen/card_padding"
+                        android:paddingVertical="@dimen/study_card_vertical_padding">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="@dimen/space_12"
+                            android:text="영단어"
+                            android:textAppearance="@style/TextAppearance.AIWordBook.Caption" />
+
+                        <TextView
+                            android:id="@+id/tv_study_word"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:breakStrategy="balanced"
+                            android:gravity="center"
+                            android:hyphenationFrequency="none"
+                            android:maxLines="8"
+                            android:text="Word"
+                            android:textAppearance="@style/TextAppearance.AIWordBook.Display" />
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Meaning reveal card -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/card_meaning_display"
+                    style="@style/Widget.AIWordBook.Card.Reveal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?android:attr/selectableItemBackground"
+                    android:minHeight="@dimen/study_card_min_height">
+
+                    <LinearLayout
+                        android:id="@+id/layout_reveal_container"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:minHeight="@dimen/study_card_min_height"
+                        android:orientation="vertical"
+                        android:paddingHorizontal="@dimen/card_padding"
+                        android:paddingVertical="@dimen/study_card_vertical_padding">
+
+                        <ImageView
+                            android:id="@+id/iv_reveal_icon"
+                            android:layout_width="@dimen/space_32"
+                            android:layout_height="@dimen/space_32"
+                            android:contentDescription="뜻 보기"
+                            android:src="@android:drawable/ic_menu_view"
+                            android:tint="@color/app_primary" />
+
+                        <TextView
+                            android:id="@+id/tv_reveal_hint"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/space_12"
+                            android:fontFamily="sans-serif-medium"
+                            android:text="눌러서 뜻 확인"
+                            android:textColor="@color/app_primary"
+                            android:textSize="@dimen/text_body_large" />
+
+                        <TextView
+                            android:id="@+id/tv_study_meaning"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:breakStrategy="balanced"
+                            android:gravity="center"
+                            android:hyphenationFrequency="none"
+                            android:maxLines="10"
+                            android:text="뜻"
+                            android:textAppearance="@style/TextAppearance.AIWordBook.Headline"
+                            android:textColor="@color/app_primary"
+                            android:visibility="gone" />
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Navigation -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/button_height_large"
+                    android:layout_marginTop="@dimen/space_20"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_study_prev"
+                        style="@style/Widget.AIWordBook.Button.Secondary"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginEnd="@dimen/space_8"
+                        android:layout_weight="1"
+                        android:text="이전" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_study_next"
+                        style="@style/Widget.AIWordBook.Button.Primary"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginStart="@dimen/space_8"
+                        android:layout_weight="1"
+                        android:text="다음" />
 
                 </LinearLayout>
-
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Spacer -->
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/space_24" />
-
-            <!-- Slide Navigation controls at bottom of cards -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/button_height_large"
-                android:orientation="horizontal"
-                android:layout_marginBottom="@dimen/space_8">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_study_prev"
-                    style="@style/Widget.AIWordBook.Button.Secondary"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:layout_marginEnd="@dimen/space_8"
-                    android:text="이전" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_study_next"
-                    style="@style/Widget.AIWordBook.Button.Primary"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:layout_marginStart="@dimen/space_8"
-                    android:text="다음" />
-
-            </LinearLayout>
 
             </LinearLayout>
 
