@@ -31,8 +31,14 @@ import okhttp3.Response;
 public class GeminiHelper {
 
     private static final String TAG = "GeminiHelper";
-    private static final String API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent";
+    private static final String MODEL_NAME = "gemini-2.5-flash";
+    private static final String API_URL = "https://generativelanguage.googleapis.com/v1beta/models/"
+            + MODEL_NAME + ":generateContent";
     private static final String PLACEHOLDER_API_KEY = "MY_GEMINI_API_KEY";
+    private static final int LOG_CHUNK_SIZE = 3000;
+    private static final int MAX_RETRIES = 2;
+    private static final long RETRY_DELAY_MS = 1500L;
+    static final String SERVER_BUSY_MESSAGE = "AI 서버가 현재 혼잡합니다. 잠시 후 다시 시도해주세요.";
 
     private final OkHttpClient client;
     private final Moshi moshi;
@@ -42,6 +48,12 @@ public class GeminiHelper {
     public interface GeminiCallback {
         void onSuccess(List<WordResult> results);
         void onError(String errorMessage);
+    }
+
+    static class GeminiUnavailableException extends IOException {
+        GeminiUnavailableException() {
+            super(SERVER_BUSY_MESSAGE);
+        }
     }
 
     public static class WordResult {
@@ -116,7 +128,12 @@ public class GeminiHelper {
 
             } catch (Exception e) {
                 Log.e(TAG, "Exception during fillMeanings", e);
-                postError(callback, "오류가 발생했습니다: " + e.getMessage());
+                postError(
+                        callback,
+                        e instanceof GeminiUnavailableException
+                                ? SERVER_BUSY_MESSAGE
+                                : "오류가 발생했습니다: " + e.getMessage()
+                );
             }
         });
     }
@@ -141,7 +158,12 @@ public class GeminiHelper {
 
             } catch (Exception e) {
                 Log.e(TAG, "Exception during extractWordsFromPdfImage", e);
-                postError(callback, "PDF AI 분석 실행 도중 장애가 발생했습니다: " + e.getMessage());
+                postError(
+                        callback,
+                        e instanceof GeminiUnavailableException
+                                ? SERVER_BUSY_MESSAGE
+                                : "PDF AI 분석 실행 도중 장애가 발생했습니다: " + e.getMessage()
+                );
             }
         });
     }
@@ -198,26 +220,116 @@ public class GeminiHelper {
 
         String requestJson = moshi.adapter(Map.class).toJson(requestMap);
 
+        // Keep the real key outside source control. The Secrets Gradle Plugin exposes
+        // GEMINI_API_KEY from the root .env file as BuildConfig.GEMINI_API_KEY.
         String fullUrl = API_URL + "?key=" + BuildConfig.GEMINI_API_KEY;
+        String redactedUrl = API_URL + "?key=<redacted>";
 
         Request request = new Request.Builder()
                 .url(fullUrl)
+                .header("Content-Type", "application/json")
                 .post(RequestBody.create(requestJson, jsonMedia))
                 .build();
 
-        try (Response response = client.newCall(request).execute()) {
-            if (!response.isSuccessful()) {
-                String errorBody = response.body() != null ? response.body().string() : "";
-                throw new IOException("Gemini API 오류 " + response.code() + ": " + errorBody);
-            }
-            if (response.body() == null) {
-                throw new IOException("Gemini API 응답 본문이 비어 있습니다.");
-            }
-            String rawResponse = response.body().string();
-            Log.d(TAG, "Raw response: " + rawResponse);
+        Log.d(TAG, "Gemini request URL: " + redactedUrl);
+        Log.d(TAG, "Gemini request Content-Type: " + jsonMedia);
+        Log.d(TAG, "Gemini API key configured: " + isApiConfigured());
+        logLong(Log.DEBUG, "Gemini request JSON: " + createSafeRequestLog(textPrompt, base64Image));
 
-            // Response의 JSON 파싱하여 text 필드 추출
-            return extractTextContentFromGeminiResponse(rawResponse);
+        for (int attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+            try (Response response = client.newCall(request).execute()) {
+                Log.d(TAG, "Gemini request attempt: " + (attempt + 1) + "/" + (MAX_RETRIES + 1));
+                Log.d(TAG, "Gemini response code: " + response.code());
+                Log.d(TAG, "Gemini response successful: " + response.isSuccessful());
+
+                if (!response.isSuccessful()) {
+                    String errorBody = response.body() != null ? response.body().string() : "";
+                    logLong(Log.ERROR, "Gemini errorBody: " + errorBody);
+
+                    if (response.code() == 503) {
+                        if (attempt < MAX_RETRIES) {
+                            Log.w(
+                                    TAG,
+                                    "Gemini server unavailable. Retrying in "
+                                            + RETRY_DELAY_MS + "ms."
+                            );
+                            waitBeforeRetry();
+                            continue;
+                        }
+                        throw new GeminiUnavailableException();
+                    }
+
+                    throw new IOException("Gemini API 오류 " + response.code() + ": " + errorBody);
+                }
+                if (response.body() == null) {
+                    throw new IOException("Gemini API 응답 본문이 비어 있습니다.");
+                }
+                String rawResponse = response.body().string();
+                logLong(Log.DEBUG, "Gemini raw response: " + rawResponse);
+
+                // Response의 JSON 파싱하여 text 필드 추출
+                return extractTextContentFromGeminiResponse(rawResponse);
+            } catch (IOException e) {
+                Log.e(
+                        TAG,
+                        "Gemini request failure. url=" + redactedUrl + ", message=" + e.getMessage(),
+                        e
+                );
+                throw e;
+            }
+        }
+
+        throw new GeminiUnavailableException();
+    }
+
+    private void waitBeforeRetry() throws IOException {
+        try {
+            Thread.sleep(RETRY_DELAY_MS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Gemini API 재시도 대기가 중단되었습니다.", e);
+        }
+    }
+
+    private String createSafeRequestLog(String textPrompt, String base64Image) {
+        Map<String, Object> safeRequestMap = new HashMap<>();
+        List<Map<String, Object>> safeContents = new ArrayList<>();
+        Map<String, Object> safeContent = new HashMap<>();
+        List<Map<String, Object>> safeParts = new ArrayList<>();
+
+        Map<String, Object> safeTextPart = new HashMap<>();
+        safeTextPart.put("text", textPrompt);
+        safeParts.add(safeTextPart);
+
+        if (base64Image != null && !base64Image.isEmpty()) {
+            Map<String, Object> safeImagePart = new HashMap<>();
+            Map<String, Object> safeInlineData = new HashMap<>();
+            safeInlineData.put("mimeType", "image/jpeg");
+            safeInlineData.put("data", "<base64 omitted, length=" + base64Image.length() + ">");
+            safeImagePart.put("inlineData", safeInlineData);
+            safeParts.add(safeImagePart);
+        }
+
+        safeContent.put("parts", safeParts);
+        safeContents.add(safeContent);
+        safeRequestMap.put("contents", safeContents);
+
+        Map<String, Object> safeGenerationConfig = new HashMap<>();
+        safeGenerationConfig.put("responseMimeType", "application/json");
+        safeRequestMap.put("generationConfig", safeGenerationConfig);
+
+        return moshi.adapter(Map.class).toJson(safeRequestMap);
+    }
+
+    private void logLong(int priority, String message) {
+        if (message == null || message.isEmpty()) {
+            Log.println(priority, TAG, "");
+            return;
+        }
+
+        for (int start = 0; start < message.length(); start += LOG_CHUNK_SIZE) {
+            int end = Math.min(message.length(), start + LOG_CHUNK_SIZE);
+            Log.println(priority, TAG, message.substring(start, end));
         }
     }
 

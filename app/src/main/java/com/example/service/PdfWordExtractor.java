@@ -99,6 +99,8 @@ public class PdfWordExtractor {
             postError(callback, "암호로 보호되었거나 접근할 수 없는 PDF입니다.");
         } catch (IllegalArgumentException e) {
             postError(callback, "지원하지 않거나 손상된 PDF 형식입니다: " + getErrorMessage(e));
+        } catch (GeminiHelper.GeminiUnavailableException e) {
+            postError(callback, GeminiHelper.SERVER_BUSY_MESSAGE);
         } catch (Exception e) {
             postError(callback, "PDF 분석 실패: " + getErrorMessage(e));
         }
