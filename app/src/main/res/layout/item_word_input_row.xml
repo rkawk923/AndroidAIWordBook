@@ -4,53 +4,48 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:gravity="center_vertical"
-    android:paddingVertical="8dp"
-    android:paddingHorizontal="4dp"
-    android:weightSum="10">
+    android:paddingVertical="@dimen/space_6">
 
     <!-- Word input field -->
     <EditText
         android:id="@+id/et_row_word"
         android:layout_width="0dp"
-        android:layout_height="44dp"
-        android:layout_weight="4"
-        android:background="@drawable/bg_search_input"
+        android:layout_height="@dimen/input_height"
+        android:layout_weight="1"
+        android:background="@drawable/bg_input"
         android:gravity="center_vertical"
         android:hint="영단어"
-        android:paddingHorizontal="12dp"
-        android:textColor="#1a1b1f"
-        android:textColorHint="#717786"
-        android:textSize="14sp"
+        android:textColor="@color/app_text_primary"
+        android:textColorHint="@color/app_text_tertiary"
+        android:textSize="@dimen/text_body"
         android:inputType="text"
         android:maxLines="1"
-        android:layout_marginEnd="6dp" />
+        android:layout_marginEnd="@dimen/space_6" />
 
     <!-- Meaning input field -->
     <EditText
         android:id="@+id/et_row_meaning"
         android:layout_width="0dp"
-        android:layout_height="44dp"
-        android:layout_weight="5"
-        android:background="@drawable/bg_search_input"
+        android:layout_height="@dimen/input_height"
+        android:layout_weight="1"
+        android:background="@drawable/bg_input"
         android:gravity="center_vertical"
         android:hint="뜻"
-        android:paddingHorizontal="12dp"
-        android:textColor="#1a1b1f"
-        android:textColorHint="#717786"
-        android:textSize="14sp"
+        android:textColor="@color/app_text_primary"
+        android:textColorHint="@color/app_text_tertiary"
+        android:textSize="@dimen/text_body"
         android:inputType="text"
         android:maxLines="1" />
 
     <!-- Delete button -->
     <ImageView
         android:id="@+id/btn_row_delete"
-        android:layout_width="0dp"
-        android:layout_height="40dp"
-        android:layout_weight="1"
-        android:layout_marginStart="4dp"
+        android:layout_width="@dimen/touch_target"
+        android:layout_height="@dimen/touch_target"
+        android:layout_marginStart="@dimen/space_4"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:src="@android:drawable/ic_menu_delete"
-        android:tint="#ff4d4d"
+        android:tint="@color/app_danger"
         android:scaleType="centerInside"
         android:contentDescription="삭제" />
 

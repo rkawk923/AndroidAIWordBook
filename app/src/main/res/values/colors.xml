@@ -1,5 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- App surfaces -->
+    <color name="app_background">#F5F6F8</color>
+    <color name="app_surface">#FFFFFF</color>
+    <color name="app_surface_subtle">#F1F3F5</color>
+    <color name="app_surface_blue">#EDF4FF</color>
+
+    <!-- Brand and states -->
+    <color name="app_primary">#3182F6</color>
+    <color name="app_primary_dark">#1B64DA</color>
+    <color name="app_primary_soft">#E8F3FF</color>
+    <color name="app_success">#2F8F5B</color>
+    <color name="app_danger">#E5484D</color>
+
+    <!-- Text and lines -->
+    <color name="app_text_primary">#191F28</color>
+    <color name="app_text_secondary">#4E5968</color>
+    <color name="app_text_tertiary">#8B95A1</color>
+    <color name="app_border">#E5E8EB</color>
+    <color name="app_divider">#EDF0F2</color>
+
     <color name="purple_200">#FFBB86FC</color>
     <color name="purple_500">#FF6200EE</color>
     <color name="purple_700">#FF3700B3</color>

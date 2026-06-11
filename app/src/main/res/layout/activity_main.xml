@@ -1,36 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#faf9fe"
+    android:background="@color/app_background"
+    android:fitsSystemWindows="true"
     tools:context=".MainActivity">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:paddingBottom="84dp"> <!-- Padding to prevent bottom navigation bar overlap -->
+        android:orientation="vertical">
 
         <!-- Top AppBar -->
         <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:background="#ffffff"
-            android:elevation="2dp"
-            android:paddingHorizontal="16dp">
+            android:layout_height="@dimen/app_bar_height"
+            android:background="@color/app_surface"
+            android:elevation="@dimen/card_elevation"
+            android:paddingHorizontal="@dimen/space_16">
 
             <ImageView
                 android:id="@+id/btn_menu"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="@dimen/touch_target"
+                android:layout_height="@dimen/touch_target"
                 android:layout_alignParentStart="true"
                 android:layout_centerVertical="true"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
-                android:padding="8dp"
+                android:padding="@dimen/space_12"
                 android:src="@android:drawable/ic_menu_sort_by_size"
-                android:tint="#0058bc"
+                android:tint="@color/app_primary"
                 android:contentDescription="메뉴" />
 
             <TextView
@@ -39,20 +39,24 @@
                 android:layout_height="wrap_content"
                 android:layout_centerVertical="true"
                 android:layout_toEndOf="@id/btn_menu"
-                android:layout_marginStart="12dp"
+                android:layout_toStartOf="@id/btn_profile"
+                android:layout_marginStart="@dimen/space_8"
+                android:layout_marginEnd="@dimen/space_8"
+                android:ellipsize="end"
+                android:maxLines="1"
                 android:text="AI 스마트 단어장"
-                android:textColor="#0058bc"
-                android:textSize="20sp"
+                android:textColor="@color/app_primary"
+                android:textSize="@dimen/text_title"
                 android:textStyle="bold" />
 
             <ImageView
                 android:id="@+id/btn_profile"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="@dimen/touch_target"
+                android:layout_height="@dimen/touch_target"
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
-                android:padding="8dp"
+                android:padding="@dimen/space_12"
                 android:src="@android:drawable/sym_def_app_icon"
                 android:contentDescription="프로필" />
 
@@ -62,7 +66,8 @@
         <FrameLayout
             android:id="@+id/main_content_container"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="0dp"
+            android:layout_weight="1">
 
             <!-- TAB 1: 단어장 목록 페이지 (최초 기본 활성 상태) -->
             <LinearLayout
@@ -81,37 +86,37 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:paddingBottom="24dp"
-                        android:paddingTop="12dp">
+                        android:paddingBottom="@dimen/space_24"
+                        android:paddingTop="@dimen/space_12">
 
                         <!-- Search Input Container -->
                         <FrameLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginHorizontal="20dp"
-                            android:layout_marginTop="8dp">
+                            android:layout_marginHorizontal="@dimen/screen_padding"
+                            android:layout_marginTop="@dimen/space_8">
 
                             <EditText
                                 android:id="@+id/et_search"
                                 android:layout_width="match_parent"
-                                android:layout_height="48dp"
+                                android:layout_height="@dimen/input_height"
                                 android:background="@drawable/bg_search_input"
-                                android:hint="  단어장 검색..."
-                                android:textColorHint="#717786"
-                                android:textSize="15sp"
+                                android:hint="단어장 검색"
+                                android:textColorHint="@color/app_text_tertiary"
+                                android:textSize="@dimen/text_body"
                                 android:inputType="text"
                                 android:maxLines="1"
-                                android:paddingStart="44dp"
-                                android:paddingEnd="16dp"
-                                android:textColor="#1a1b1f" />
+                                android:paddingStart="@dimen/space_48"
+                                android:paddingEnd="@dimen/space_16"
+                                android:textColor="@color/app_text_primary" />
 
                             <ImageView
-                                android:layout_width="20dp"
-                                android:layout_height="20dp"
+                                android:layout_width="@dimen/space_20"
+                                android:layout_height="@dimen/space_20"
                                 android:layout_gravity="start|center_vertical"
-                                android:layout_marginStart="16dp"
+                                android:layout_marginStart="@dimen/space_16"
                                 android:src="@android:drawable/ic_menu_search"
-                                android:tint="#717786"
+                                android:tint="@color/app_text_tertiary"
                                 android:contentDescription="검색 아이콘" />
 
                         </FrameLayout>
@@ -120,19 +125,17 @@
                         <RelativeLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginHorizontal="20dp"
-                            android:layout_marginTop="24dp"
-                            android:layout_marginBottom="12dp">
+                            android:layout_marginHorizontal="@dimen/screen_padding"
+                            android:layout_marginTop="@dimen/space_24"
+                            android:layout_marginBottom="@dimen/space_12">
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_alignParentStart="true"
                                 android:layout_centerVertical="true"
-                                android:text="내 단어장 폴더"
-                                android:textColor="#1a1b1f"
-                                android:textSize="18sp"
-                                android:textStyle="bold" />
+                                android:text="내 단어장"
+                                android:textAppearance="@style/TextAppearance.AIWordBook.Title" />
 
                             <TextView
                                 android:id="@+id/btn_view_all"
@@ -141,11 +144,11 @@
                                 android:layout_alignParentEnd="true"
                                 android:layout_centerVertical="true"
                                 android:text="전체보기"
-                                android:textColor="#0058bc"
-                                android:textSize="14sp"
+                                android:textColor="@color/app_primary"
+                                android:textSize="@dimen/text_body"
                                 android:textStyle="bold"
                                 android:background="?android:attr/selectableItemBackground"
-                                android:padding="4dp" />
+                                android:padding="@dimen/space_4" />
 
                         </RelativeLayout>
 
@@ -161,25 +164,25 @@
                         <LinearLayout
                             android:id="@+id/layout_empty_state"
                             android:layout_width="match_parent"
-                            android:layout_height="300dp"
+                            android:layout_height="@dimen/empty_state_height"
                             android:gravity="center"
                             android:orientation="vertical"
+                            android:padding="@dimen/space_24"
                             android:visibility="gone">
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="📭"
-                                android:textSize="48sp" />
+                                android:text="아직 단어장이 없습니다"
+                                android:textAppearance="@style/TextAppearance.AIWordBook.Title" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="12dp"
-                                android:text="등록된 단어장이 없습니다.\n하단바 '추가' 탭으로 단어장을 만들어보세요!"
+                                android:layout_marginTop="@dimen/space_8"
+                                android:text="아래 추가 탭에서 첫 단어장을 만들어보세요."
                                 android:gravity="center"
-                                android:textColor="#717786"
-                                android:textSize="15sp" />
+                                android:textAppearance="@style/TextAppearance.AIWordBook.Body.Secondary" />
 
                         </LinearLayout>
 
@@ -190,65 +193,65 @@
             </LinearLayout>
 
             <!-- TAB 2: 학습 레포트 페이지 (최근 방문한 단어장 통계 및 진행도 표시) -->
-            <LinearLayout
+            <ScrollView
                 android:id="@+id/tab_container_learn"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:visibility="gone"
-                android:padding="20dp">
+                android:fillViewport="true"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="@dimen/screen_padding"
+                    android:paddingBottom="@dimen/space_32">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="오늘의 학습 레포트"
-                    android:textColor="#1a1b1f"
-                    android:textSize="22sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="16dp" />
+                    android:textAppearance="@style/TextAppearance.AIWordBook.Headline"
+                    android:layout_marginBottom="@dimen/space_16" />
 
                 <!-- Empty State for Learn Report -->
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/card_learn_empty"
+                    style="@style/Widget.AIWordBook.Card"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="2dp"
-                    app:strokeWidth="1dp"
-                    app:strokeColor="#e3e2e7"
-                    app:cardBackgroundColor="#ffffff"
                     android:visibility="visible">
 
                     <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="240dp"
+                        android:layout_height="@dimen/report_empty_height"
                         android:gravity="center"
                         android:orientation="vertical"
-                        android:padding="24dp">
+                        android:padding="@dimen/space_24">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="📊"
-                            android:textSize="48sp" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="16dp"
-                            android:text="학습 진행 기록이 존재하지 않습니다."
-                            android:textColor="#1a1b1f"
-                            android:textSize="16sp"
+                            android:text="학습 기록"
+                            android:textColor="@color/app_primary"
+                            android:textSize="@dimen/text_body"
                             android:textStyle="bold" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="6dp"
-                            android:text="단어장에 클릭해 카드로 암기 학습을 진행하면\n여기에 실시간 학습 진행률이 리포트됩니다."
+                            android:layout_marginTop="@dimen/space_16"
+                            android:text="학습 진행 기록이 존재하지 않습니다."
                             android:gravity="center"
-                            android:textColor="#717786"
-                            android:textSize="13sp" />
+                            android:textAppearance="@style/TextAppearance.AIWordBook.Title" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/space_8"
+                            android:text="단어장을 열어 카드 학습을 진행하면\n여기에 학습 진행률이 표시됩니다."
+                            android:gravity="center"
+                            android:textAppearance="@style/TextAppearance.AIWordBook.Body.Secondary" />
 
                     </LinearLayout>
 
@@ -264,49 +267,46 @@
 
                     <!-- Visual Progress Card -->
                     <com.google.android.material.card.MaterialCardView
+                        style="@style/Widget.AIWordBook.Card.Highlight"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        app:cardCornerRadius="20dp"
-                        app:cardElevation="3dp"
-                        app:strokeWidth="0dp"
-                        app:cardBackgroundColor="#eef4ff"
-                        android:layout_marginBottom="16dp">
+                        android:layout_marginBottom="@dimen/space_16">
 
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
-                            android:padding="20dp">
+                            android:padding="@dimen/card_padding">
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="가장 최근 학습 중인 단어장"
-                                android:textColor="#0058bc"
-                                android:textSize="13sp"
+                                android:textColor="@color/app_primary"
+                                android:textSize="@dimen/text_caption"
                                 android:textStyle="bold" />
 
                             <TextView
                                 android:id="@+id/tv_learn_vocab_name"
-                                android:layout_width="wrap_content"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="4dp"
+                                android:layout_marginTop="@dimen/space_4"
+                                android:ellipsize="end"
+                                android:maxLines="2"
                                 android:text="비즈니스 영어 실전"
-                                android:textColor="#1a1b1f"
-                                android:textSize="22sp"
-                                android:textStyle="bold" />
+                                android:textAppearance="@style/TextAppearance.AIWordBook.Headline" />
 
                             <!-- Progress Stats Circle Simulation -->
                             <RelativeLayout
                                 android:layout_width="match_parent"
-                                android:layout_height="120dp"
-                                android:layout_marginTop="16dp">
+                                android:layout_height="@dimen/report_progress_area_height"
+                                android:layout_marginTop="@dimen/space_16">
 
                                 <ProgressBar
                                     android:id="@+id/pb_learn_circle"
                                     style="?android:attr/progressBarStyleLarge"
-                                    android:layout_width="100dp"
-                                    android:layout_height="100dp"
+                                    android:layout_width="@dimen/report_progress_size"
+                                    android:layout_height="@dimen/report_progress_size"
                                     android:layout_centerInParent="true"
                                     android:indeterminate="false"
                                     android:max="100"
@@ -318,8 +318,8 @@
                                     android:layout_height="wrap_content"
                                     android:layout_centerInParent="true"
                                     android:text="75%"
-                                    android:textColor="#0058bc"
-                                    android:textSize="18sp"
+                                    android:textColor="@color/app_primary"
+                                    android:textSize="@dimen/text_title"
                                     android:textStyle="bold" />
 
                             </RelativeLayout>
@@ -329,10 +329,10 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_gravity="center_horizontal"
-                                android:layout_marginTop="12dp"
+                                android:layout_marginTop="@dimen/space_12"
                                 android:text="학습완료: 30 / 전체: 40 단어"
-                                android:textColor="#414755"
-                                android:textSize="14sp"
+                                android:textColor="@color/app_text_secondary"
+                                android:textSize="@dimen/text_body"
                                 android:textStyle="bold" />
 
                         </LinearLayout>
@@ -342,19 +342,16 @@
                     <!-- Interactive Resume Button -->
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_resume_study"
-                        style="@style/Widget.Material3.Button"
+                        style="@style/Widget.AIWordBook.Button.Primary"
                         android:layout_width="match_parent"
-                        android:layout_height="56dp"
-                        android:text="⚡ 이 어휘 학습 계속하기 (이어 학습)"
-                        android:textColor="#ffffff"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        app:backgroundTint="#0058bc"
-                        app:cornerRadius="14dp" />
+                        android:layout_height="@dimen/button_height_large"
+                        android:text="이어서 학습하기" />
 
                 </LinearLayout>
 
-            </LinearLayout>
+                </LinearLayout>
+
+            </ScrollView>
 
             <!-- TAB 3: 단어 입력 페이지 (네번째 사진 구현부 - 새 단어장 및 영어단어,한글뜻 입력) -->
             <ScrollView
@@ -368,131 +365,122 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="20dp"
-                    android:paddingBottom="48dp">
+                    android:padding="@dimen/screen_padding"
+                    android:paddingBottom="@dimen/space_48">
 
                     <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="16dp">
+                        android:layout_marginBottom="@dimen/space_16">
 
                         <TextView
                             android:id="@+id/tv_add_page_title"
-                            android:layout_width="wrap_content"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_alignParentStart="true"
                             android:layout_centerVertical="true"
+                            android:layout_toStartOf="@id/btn_add_help"
+                            android:layout_marginEnd="@dimen/space_8"
+                            android:ellipsize="end"
+                            android:maxLines="2"
                             android:text="새 단어장 추가"
-                            android:textColor="#1a1b1f"
-                            android:textSize="22sp"
-                            android:textStyle="bold" />
+                            android:textAppearance="@style/TextAppearance.AIWordBook.Headline" />
 
                         <ImageView
                             android:id="@+id/btn_add_help"
-                            android:layout_width="36dp"
-                            android:layout_height="36dp"
+                            android:layout_width="@dimen/touch_target"
+                            android:layout_height="@dimen/touch_target"
                             android:layout_alignParentEnd="true"
                             android:layout_centerVertical="true"
                             android:background="?android:attr/selectableItemBackgroundBorderless"
                             android:src="@android:drawable/ic_menu_help"
-                            android:tint="#717786"
-                            android:padding="6dp"
+                            android:tint="@color/app_text_tertiary"
+                            android:padding="@dimen/space_12"
                             android:contentDescription="도움말" />
 
                     </RelativeLayout>
 
                     <!-- Input Vocab Name -->
                     <com.google.android.material.textfield.TextInputLayout
-                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                        style="@style/Widget.AIWordBook.TextInputLayout"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="12dp"
-                        app:boxStrokeColor="#0058bc"
-                        app:hintTextColor="#0058bc"
+                        android:layout_marginBottom="@dimen/space_12"
                         android:hint="단어장 이름 (예: 수능 영단어 필수)">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/et_vocab_name"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:textColor="#1a1b1f"
+                            android:textColor="@color/app_text_primary"
                             android:inputType="text" />
 
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <!-- Input Vocab Description -->
                     <com.google.android.material.textfield.TextInputLayout
-                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                        style="@style/Widget.AIWordBook.TextInputLayout"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="16dp"
-                        app:boxStrokeColor="#0058bc"
-                        app:hintTextColor="#0058bc"
+                        android:layout_marginBottom="@dimen/space_16"
                         android:hint="단어장 설명 (간단한 메모)">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/et_vocab_desc"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:textColor="#1a1b1f"
-                            android:inputType="textLongMessage" />
+                            android:textColor="@color/app_text_primary"
+                            android:inputType="textLongMessage"
+                            android:maxLines="3" />
 
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <!-- AI Smart Assistants Frame -->
                     <com.google.android.material.card.MaterialCardView
+                        style="@style/Widget.AIWordBook.Card.Highlight"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        app:cardCornerRadius="16dp"
-                        app:cardElevation="0dp"
-                        app:strokeWidth="1dp"
-                        app:strokeColor="#c7d5ef"
-                        app:cardBackgroundColor="#f0f5ff"
-                        android:layout_marginBottom="24dp">
+                        android:layout_marginBottom="@dimen/space_24">
 
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
-                            android:padding="16dp">
+                            android:padding="@dimen/card_padding">
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="🤖 AI 스마트 단어 추천 &amp; 추출 어시스턴트"
-                                android:textColor="#0058bc"
-                                android:textSize="14sp"
+                                android:text="AI 단어 도우미"
+                                android:textColor="@color/app_primary"
+                                android:textSize="@dimen/text_body"
                                 android:textStyle="bold"
-                                android:layout_marginBottom="12dp" />
+                                android:layout_marginBottom="@dimen/space_12" />
 
                             <!-- Extra PDF Button -->
                             <com.google.android.material.button.MaterialButton
                                 android:id="@+id/btn_pdf_extract"
-                                style="@style/Widget.Material3.Button.ElevatedButton"
+                                style="@style/Widget.AIWordBook.Button.Secondary"
                                 android:layout_width="match_parent"
-                                android:layout_height="52dp"
-                                android:text="📄 PDF 파이로드해 AI 단어 자동 고출"
+                                android:layout_height="@dimen/button_height"
+                                android:text="PDF에서 단어 추출"
                                 android:textAlignment="viewStart"
-                                android:textColor="#0058bc"
-                                android:textSize="14sp"
-                                android:textStyle="bold"
+                                android:textColor="@color/app_primary"
                                 app:icon="@android:drawable/ic_menu_add"
-                                app:iconTint="#0058bc"
-                                android:layout_marginBottom="8dp" />
+                                app:iconTint="@color/app_primary"
+                                android:layout_marginBottom="@dimen/space_8" />
 
                             <!-- Smart Recommend Fill button -->
                             <com.google.android.material.button.MaterialButton
                                 android:id="@+id/btn_ai_complete"
-                                style="@style/Widget.Material3.Button.ElevatedButton"
+                                style="@style/Widget.AIWordBook.Button.Secondary"
                                 android:layout_width="match_parent"
-                                android:layout_height="52dp"
-                                android:text="✨ 단어 입력 후 AI 뜻 채우기 (스마트 완성)"
+                                android:layout_height="@dimen/button_height"
+                                android:text="AI로 빈 뜻 채우기"
                                 android:textAlignment="viewStart"
-                                android:textColor="#13532c"
-                                android:textSize="14sp"
-                                android:textStyle="bold"
+                                android:textColor="@color/app_primary"
                                 app:icon="@android:drawable/ic_menu_compass"
-                                app:iconTint="#13532c" />
+                                app:iconTint="@color/app_primary" />
 
                         </LinearLayout>
 
@@ -503,10 +491,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="단어 목록 입력"
-                        android:textColor="#1a1b1f"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:layout_marginBottom="8dp" />
+                        android:textAppearance="@style/TextAppearance.AIWordBook.Title"
+                        android:layout_marginBottom="@dimen/space_8" />
 
                     <!-- Container where we dynamically add Rows of item_word_input_row -->
                     <LinearLayout
@@ -514,34 +500,24 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:layout_marginBottom="12dp" />
+                        android:layout_marginBottom="@dimen/space_12" />
 
                     <!-- Button: Add row -->
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_add_row"
-                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        style="@style/Widget.AIWordBook.Button.Secondary"
                         android:layout_width="match_parent"
-                        android:layout_height="48dp"
+                        android:layout_height="@dimen/button_height"
                         android:text="+ 단어 추가하기"
-                        android:textColor="#6b7280"
-                        android:textSize="14sp"
-                        app:strokeColor="#d1d5db"
-                        app:strokeWidth="1.5dp"
-                        app:cornerRadius="10dp"
-                        android:layout_marginBottom="32dp" />
+                        android:layout_marginBottom="@dimen/space_32" />
 
                     <!-- Promo/Actions panel -->
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_save_vocabulary"
-                        style="@style/Widget.Material3.Button"
+                        style="@style/Widget.AIWordBook.Button.Primary"
                         android:layout_width="match_parent"
-                        android:layout_height="56dp"
-                        android:text="💾 단어장 저장 완료"
-                        android:textColor="#ffffff"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        app:backgroundTint="#0058bc"
-                        app:cornerRadius="12dp" />
+                        android:layout_height="@dimen/button_height_large"
+                        android:text="단어장 저장" />
 
                 </LinearLayout>
 
@@ -549,20 +525,18 @@
 
         </FrameLayout>
 
-    </LinearLayout>
+        <com.google.android.material.bottomnavigation.BottomNavigationView
+            android:id="@+id/bottom_navigation"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/bottom_navigation_height"
+            android:background="@color/app_surface"
+            app:elevation="@dimen/space_8"
+            app:itemIconTint="@color/nav_item_color"
+            app:itemTextColor="@color/nav_item_color"
+            app:labelVisibilityMode="labeled"
+            app:menu="@menu/bottom_nav_menu" />
 
-    <!-- Bottom Navigation Bar: Standarized height to 80dp to PERFECTLY prevent icon/title overlap -->
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/bottom_navigation"
-        android:layout_width="match_parent"
-        android:layout_height="80dp"
-        android:layout_gravity="bottom"
-        android:background="#ffffff"
-        app:elevation="8dp"
-        app:menu="@menu/bottom_nav_menu"
-        app:labelVisibilityMode="labeled"
-        app:itemIconTint="@color/nav_item_color"
-        app:itemTextColor="@color/nav_item_color" />
+    </LinearLayout>
 
     <!-- Floating Action Button (FAB) -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -570,12 +544,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
-        android:layout_margin="24dp"
-        android:layout_marginBottom="96dp"
+        android:layout_margin="@dimen/space_20"
+        android:layout_marginBottom="@dimen/fab_bottom_offset"
         android:src="@android:drawable/ic_input_add"
         android:contentDescription="단어장 추가"
-        app:backgroundTint="#0058bc"
-        app:tint="#ffffff"
+        app:backgroundTint="@color/app_primary"
+        app:tint="@color/app_surface"
         app:fabSize="normal" />
 
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</FrameLayout>

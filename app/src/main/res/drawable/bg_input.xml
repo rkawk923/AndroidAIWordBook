@@ -6,4 +6,9 @@
         android:width="@dimen/stroke_width"
         android:color="@color/app_border" />
     <corners android:radius="@dimen/radius_medium" />
+    <padding
+        android:bottom="@dimen/space_12"
+        android:left="@dimen/space_16"
+        android:right="@dimen/space_16"
+        android:top="@dimen/space_12" />
 </shape>

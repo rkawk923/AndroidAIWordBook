@@ -1,11 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="Theme.MyApplication" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your theme here. -->
-        <item name="colorPrimary">#0058bc</item>
-        <item name="colorOnPrimary">#ffffff</item>
-        <item name="colorSecondary">#54606b</item>
-        <item name="colorSurface">#faf9fe</item>
-        <item name="colorOnSurface">#1a1b1f</item>
+        <item name="colorPrimary">@color/app_primary</item>
+        <item name="colorOnPrimary">@color/app_surface</item>
+        <item name="colorSecondary">@color/app_text_secondary</item>
+        <item name="colorSurface">@color/app_surface</item>
+        <item name="colorSurfaceVariant">@color/app_surface_subtle</item>
+        <item name="colorOnSurface">@color/app_text_primary</item>
+        <item name="colorOutline">@color/app_border</item>
+        <item name="android:colorAccent">@color/app_primary</item>
+        <item name="android:fontFamily">sans</item>
+        <item name="android:navigationBarColor">@color/app_surface</item>
+        <item name="android:statusBarColor">@color/app_surface</item>
+        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowBackground">@color/app_background</item>
     </style>
 </resources>

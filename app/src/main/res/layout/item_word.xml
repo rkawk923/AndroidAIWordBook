@@ -1,21 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    style="@style/Widget.AIWordBook.Card"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginHorizontal="16dp"
-    android:layout_marginVertical="6dp"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="1dp"
-    app:strokeWidth="1dp"
-    app:strokeColor="#e3e2e7"
-    app:cardBackgroundColor="#ffffff">
+    android:layout_marginHorizontal="@dimen/screen_padding"
+    android:layout_marginVertical="@dimen/space_6">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="16dp"
+        android:padding="@dimen/card_padding"
         android:gravity="center_vertical">
 
         <LinearLayout
@@ -26,21 +22,23 @@
 
             <TextView
                 android:id="@+id/tv_word"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="2"
                 android:text="Apple"
-                android:textColor="#0058bc"
-                android:textSize="18sp"
+                android:textColor="@color/app_primary"
+                android:textSize="@dimen/text_title"
                 android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/tv_meaning"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="@dimen/space_4"
+                android:maxLines="3"
                 android:text="사과"
-                android:textColor="#1a1b1f"
-                android:textSize="15sp" />
+                android:textAppearance="@style/TextAppearance.AIWordBook.Body" />
 
         </LinearLayout>
 
@@ -51,22 +49,22 @@
 
             <ImageButton
                 android:id="@+id/btn_edit_word"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
+                android:layout_width="@dimen/touch_target"
+                android:layout_height="@dimen/touch_target"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:src="@android:drawable/ic_menu_edit"
                 android:contentDescription="단어 수정"
-                android:tint="#54606b" />
+                android:tint="@color/app_text_secondary" />
 
             <ImageButton
                 android:id="@+id/btn_delete_word"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:layout_marginStart="8dp"
+                android:layout_width="@dimen/touch_target"
+                android:layout_height="@dimen/touch_target"
+                android:layout_marginStart="@dimen/space_4"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:src="@android:drawable/ic_menu_delete"
                 android:contentDescription="단어 삭제"
-                android:tint="#ba1a1a" />
+                android:tint="@color/app_danger" />
 
         </LinearLayout>
 

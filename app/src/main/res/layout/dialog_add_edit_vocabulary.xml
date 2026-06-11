@@ -4,19 +4,17 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:paddingHorizontal="24dp"
-    android:paddingTop="16dp"
-    android:paddingBottom="16dp">
+    android:paddingHorizontal="@dimen/dialog_padding"
+    android:paddingTop="@dimen/space_16"
+    android:paddingBottom="@dimen/space_16">
 
     <!-- Vocabulary Name Input -->
     <com.google.android.material.textfield.TextInputLayout
-        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+        style="@style/Widget.AIWordBook.TextInputLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="단어장 이름"
-        app:boxStrokeColor="#0058bc"
-        app:hintTextColor="#0058bc"
-        android:layout_marginBottom="16dp">
+        android:layout_marginBottom="@dimen/space_16">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/et_dialog_vocab_name"
@@ -24,26 +22,24 @@
             android:layout_height="wrap_content"
             android:inputType="text"
             android:maxLines="1"
-            android:textColor="#1a1b1f" />
+            android:textColor="@color/app_text_primary" />
 
     </com.google.android.material.textfield.TextInputLayout>
 
     <!-- Vocabulary Description Input -->
     <com.google.android.material.textfield.TextInputLayout
-        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+        style="@style/Widget.AIWordBook.TextInputLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="단어장 설명 (여행 회화, 시험 대비 등)"
-        app:boxStrokeColor="#0058bc"
-        app:hintTextColor="#0058bc">
+        android:hint="단어장 설명 (여행 회화, 시험 대비 등)">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/et_dialog_vocab_desc"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="text"
+            android:inputType="textLongMessage"
             android:maxLines="3"
-            android:textColor="#1a1b1f" />
+            android:textColor="@color/app_text_primary" />
 
     </com.google.android.material.textfield.TextInputLayout>
 
