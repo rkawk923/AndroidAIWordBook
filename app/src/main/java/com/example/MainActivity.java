@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
@@ -53,6 +54,7 @@ import java.util.concurrent.Executors;
  */
 public class MainActivity extends AppCompatActivity implements VocabularyAdapter.OnVocabularyClickListener {
 
+    private static final String TAG = "MainActivity";
     private static final int REQUEST_CODE_PDF_PICK = 422;
 
     private AppDatabase db;
@@ -90,6 +92,8 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
     private TextInputEditText etVocabName;
     private TextInputEditText etVocabDesc;
     private LinearLayout containerWordRows;
+    private MaterialButton btnAiComplete;
+    private MaterialButton btnPdfExtract;
     private int editingVocabularyId = 0; // 0이면 신규 추가, >0이면 특정 단어장 편집 수정
 
     @Override
@@ -165,10 +169,12 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
         findViewById(R.id.btn_save_vocabulary).setOnClickListener(v -> saveVocabularyData());
 
         // AI 스마트 채우기 뜻 매핑 버튼 연결
-        findViewById(R.id.btn_ai_complete).setOnClickListener(v -> executeAiSmartFill());
+        btnAiComplete = findViewById(R.id.btn_ai_complete);
+        btnAiComplete.setOnClickListener(v -> executeAiSmartFill());
 
         // PDF 영단어 추출 및 업로드 연동 클릭
-        findViewById(R.id.btn_pdf_extract).setOnClickListener(v -> triggerPdfSelection());
+        btnPdfExtract = findViewById(R.id.btn_pdf_extract);
+        btnPdfExtract.setOnClickListener(v -> triggerPdfSelection());
 
         findViewById(R.id.btn_add_help).setOnClickListener(v -> showHelpDialog());
 
@@ -206,6 +212,129 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
                     WindowManager.LayoutParams.MATCH_PARENT,
                     WindowManager.LayoutParams.WRAP_CONTENT
             );
+        }
+    }
+
+    private void showAiErrorDialog(String title, String message) {
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_ai_error, null);
+        AlertDialog dialog = new MaterialAlertDialogBuilder(this)
+                .setView(dialogView)
+                .create();
+
+        TextView titleView = dialogView.findViewById(R.id.tv_ai_error_title);
+        TextView messageView = dialogView.findViewById(R.id.tv_ai_error_message);
+        MaterialButton confirmButton = dialogView.findViewById(R.id.btn_ai_error_confirm);
+
+        titleView.setText(title);
+        messageView.setText(message);
+        confirmButton.setOnClickListener(v -> dialog.dismiss());
+
+        dialog.setCancelable(false);
+        dialog.setCanceledOnTouchOutside(false);
+        dialog.show();
+
+        Window window = dialog.getWindow();
+        if (window != null) {
+            window.setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
+            window.setLayout(
+                    WindowManager.LayoutParams.MATCH_PARENT,
+                    WindowManager.LayoutParams.WRAP_CONTENT
+            );
+        }
+    }
+
+    private String getUserFriendlyAiErrorTitle(String errorMessage) {
+        String normalized = normalizeAiErrorMessage(errorMessage);
+        if (isQuotaExceededError(normalized)) {
+            return "AI 요청 한도를 초과했어요";
+        }
+        if (isServerUnavailableError(normalized)) {
+            return "AI 서버가 혼잡해요";
+        }
+        if (isTimeoutError(normalized)) {
+            return "요청 시간이 초과됐어요";
+        }
+        if (isNetworkError(normalized)) {
+            return "네트워크 연결을 확인해 주세요";
+        }
+        if (isJsonParseError(normalized)) {
+            return "AI 응답을 처리하지 못했어요";
+        }
+        return "AI 요청에 실패했어요";
+    }
+
+    private String getUserFriendlyAiErrorMessage(String errorMessage) {
+        String normalized = normalizeAiErrorMessage(errorMessage);
+        if (isQuotaExceededError(normalized)) {
+            return "오늘 사용할 수 있는 AI 요청량을 모두 사용했어요. 잠시 후 다시 시도하거나 내일 다시 이용해 주세요.";
+        }
+        if (isServerUnavailableError(normalized)) {
+            return "현재 AI 서버 응답이 원활하지 않아요. 잠시 후 다시 시도해 주세요.";
+        }
+        if (isTimeoutError(normalized)) {
+            return "AI 응답을 기다리는 시간이 길어졌어요. 네트워크 상태를 확인한 뒤 다시 시도해 주세요.";
+        }
+        if (isNetworkError(normalized)) {
+            return "인터넷 연결이 불안정하거나 서버에 연결할 수 없어요. 연결 상태를 확인한 뒤 다시 시도해 주세요.";
+        }
+        if (isJsonParseError(normalized)) {
+            return "AI가 예상과 다른 형식으로 응답했어요. 다시 시도해 주세요.";
+        }
+        return "일시적인 오류가 발생했어요. 잠시 후 다시 시도해 주세요.";
+    }
+
+    private String normalizeAiErrorMessage(String errorMessage) {
+        return errorMessage == null ? "" : errorMessage.toLowerCase();
+    }
+
+    private boolean isQuotaExceededError(String errorMessage) {
+        return errorMessage.contains("429")
+                || errorMessage.contains("resource_exhausted")
+                || errorMessage.contains("quota");
+    }
+
+    private boolean isServerUnavailableError(String errorMessage) {
+        return errorMessage.contains("503")
+                || errorMessage.contains("unavailable")
+                || errorMessage.contains("server busy")
+                || errorMessage.contains("서버")
+                || errorMessage.contains("혼잡");
+    }
+
+    private boolean isTimeoutError(String errorMessage) {
+        return errorMessage.contains("timeout")
+                || errorMessage.contains("timed out")
+                || errorMessage.contains("시간이 초과")
+                || errorMessage.contains("시간 초과");
+    }
+
+    private boolean isNetworkError(String errorMessage) {
+        return errorMessage.contains("network")
+                || errorMessage.contains("failed to connect")
+                || errorMessage.contains("unable to resolve host")
+                || errorMessage.contains("connection")
+                || errorMessage.contains("socket")
+                || errorMessage.contains("인터넷")
+                || errorMessage.contains("네트워크");
+    }
+
+    private boolean isJsonParseError(String errorMessage) {
+        return errorMessage.contains("json")
+                || errorMessage.contains("parse")
+                || errorMessage.contains("parsing")
+                || errorMessage.contains("분석에 실패")
+                || errorMessage.contains("형식")
+                || errorMessage.contains("응답 구조");
+    }
+
+    private void setAiLoadingState(boolean isLoading) {
+        if (btnAiComplete != null) {
+            btnAiComplete.setEnabled(!isLoading);
+            btnAiComplete.setAlpha(isLoading ? 0.55f : 1f);
+        }
+        if (btnPdfExtract != null) {
+            btnPdfExtract.setEnabled(!isLoading);
+            btnPdfExtract.setAlpha(isLoading ? 0.55f : 1f);
         }
     }
 
@@ -393,12 +522,14 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
         final ProgressDialog dialog = new ProgressDialog(this);
         dialog.setMessage("스마트 AI가 입력한 핵심 영단어 뜻풀이와 파생 의미를 분석하여 추천 기재 중입니다...");
         dialog.setCancelable(false);
+        setAiLoadingState(true);
         dialog.show();
 
         geminiHelper.fillMeanings(wordsToFill, new GeminiHelper.GeminiCallback() {
             @Override
             public void onSuccess(List<GeminiHelper.WordResult> results) {
                 dialog.dismiss();
+                setAiLoadingState(false);
                 if (results == null || results.isEmpty()) {
                     Toast.makeText(MainActivity.this, "AI 분석 뜻을 생성하지 못했습니다.", Toast.LENGTH_SHORT).show();
                     return;
@@ -411,7 +542,12 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
             @Override
             public void onError(String errorMessage) {
                 dialog.dismiss();
-                Toast.makeText(MainActivity.this, errorMessage, Toast.LENGTH_LONG).show();
+                setAiLoadingState(false);
+                Log.e(TAG, "Gemini fill meanings failed: " + errorMessage);
+                showAiErrorDialog(
+                        getUserFriendlyAiErrorTitle(errorMessage),
+                        getUserFriendlyAiErrorMessage(errorMessage)
+                );
             }
         });
     }
@@ -476,6 +612,7 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
      * PDF 파선택을 유도하는 인텐트 트리거
      */
     private void triggerPdfSelection() {
+        setAiLoadingState(true);
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("application/pdf");
         startActivityForResult(intent, REQUEST_CODE_PDF_PICK);
@@ -486,6 +623,8 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_CODE_PDF_PICK && resultCode == RESULT_OK && data != null && data.getData() != null) {
             processPdfFile(data.getData());
+        } else if (requestCode == REQUEST_CODE_PDF_PICK) {
+            setAiLoadingState(false);
         }
     }
 
@@ -494,17 +633,19 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
      */
     private void processPdfFile(Uri uri) {
         if (!GeminiHelper.isApiConfigured()) {
-            Toast.makeText(
-                    this,
-                    "Gemini API Key가 설정되지 않았습니다. 프로젝트 루트의 .env 파일을 확인해 주세요.",
-                    Toast.LENGTH_LONG
-            ).show();
+            setAiLoadingState(false);
+            Log.e(TAG, "Gemini API key is not configured.");
+            showAiErrorDialog(
+                    getUserFriendlyAiErrorTitle("Gemini API Key가 설정되지 않았습니다."),
+                    getUserFriendlyAiErrorMessage("Gemini API Key가 설정되지 않았습니다.")
+            );
             return;
         }
 
         final ProgressDialog progress = new ProgressDialog(this);
         progress.setMessage("가져온 PDF 학습 문서를 분석하기 위해 준비 중입니다...");
         progress.setCancelable(false);
+        setAiLoadingState(true);
         progress.show();
 
         pdfWordExtractor.extract(uri, new PdfWordExtractor.Callback() {
@@ -522,6 +663,7 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
                     boolean pageLimitApplied
             ) {
                 progress.dismiss();
+                setAiLoadingState(false);
                 if (results == null || results.isEmpty()) {
                     Toast.makeText(
                             MainActivity.this,
@@ -562,7 +704,12 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
             @Override
             public void onError(String errorMessage) {
                 progress.dismiss();
-                Toast.makeText(MainActivity.this, errorMessage, Toast.LENGTH_LONG).show();
+                setAiLoadingState(false);
+                Log.e(TAG, "Gemini PDF extraction failed: " + errorMessage);
+                showAiErrorDialog(
+                        getUserFriendlyAiErrorTitle(errorMessage),
+                        getUserFriendlyAiErrorMessage(errorMessage)
+                );
             }
         });
     }
