@@ -94,6 +94,7 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
     private LinearLayout containerWordRows;
     private MaterialButton btnAiComplete;
     private MaterialButton btnPdfExtract;
+    private boolean isTabNavigationConfirmed = false;
     private int editingVocabularyId = 0; // 0이면 신규 추가, >0이면 특정 단어장 편집 수정
 
     @Override
@@ -184,8 +185,7 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
         // 하단바 클릭 탭 분기 핸들링
         bottomNavigation = findViewById(R.id.bottom_navigation);
         bottomNavigation.setOnItemSelectedListener(item -> {
-            switchTab(item.getItemId());
-            return true;
+            return navigateToTabAfterConfirm(item.getItemId());
         });
 
         // 기본 활성 탭
@@ -338,6 +338,116 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
         }
     }
 
+    private boolean navigateToTabAfterConfirm(int targetTabId) {
+        int currentTabId = bottomNavigation.getSelectedItemId();
+        if (isTabNavigationConfirmed) {
+            switchTab(targetTabId);
+            return true;
+        }
+
+        if (currentTabId == R.id.nav_add
+                && targetTabId != R.id.nav_add
+                && hasUnsavedAddEditChanges()) {
+            showLeaveAddEditConfirmDialog(() -> {
+                exitEditMode();
+                clearAddEditForm();
+                isTabNavigationConfirmed = true;
+                bottomNavigation.setSelectedItemId(targetTabId);
+                isTabNavigationConfirmed = false;
+            });
+            return false;
+        }
+
+        switchTab(targetTabId);
+        return true;
+    }
+
+    private boolean hasUnsavedVocabularyInput() {
+        if (!isEditTextEmpty(etVocabName) || !isEditTextEmpty(etVocabDesc)) {
+            return true;
+        }
+
+        for (int i = 0; i < containerWordRows.getChildCount(); i++) {
+            View row = containerWordRows.getChildAt(i);
+            EditText etWord = row.findViewById(R.id.et_row_word);
+            EditText etMeaning = row.findViewById(R.id.et_row_meaning);
+            if (!isEditTextEmpty(etWord) || !isEditTextEmpty(etMeaning)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasUnsavedEditInput() {
+        return editingVocabularyId > 0;
+    }
+
+    private boolean hasUnsavedAddEditChanges() {
+        return hasUnsavedEditInput() || hasUnsavedVocabularyInput();
+    }
+
+    private void showLeaveAddEditConfirmDialog(Runnable onConfirm) {
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_unsaved_changes, null);
+        AlertDialog dialog = new MaterialAlertDialogBuilder(this)
+                .setView(dialogView)
+                .create();
+
+        TextView titleView = dialogView.findViewById(R.id.tv_unsaved_changes_title);
+        TextView messageView = dialogView.findViewById(R.id.tv_unsaved_changes_message);
+        MaterialButton cancelButton = dialogView.findViewById(R.id.btn_unsaved_changes_cancel);
+        MaterialButton confirmButton = dialogView.findViewById(R.id.btn_unsaved_changes_confirm);
+
+        if (hasUnsavedEditInput()) {
+            titleView.setText("편집을 종료할까요?");
+            messageView.setText("저장하지 않고 이동하면 수정 중인 내용이 사라집니다. 이동할까요?");
+        } else {
+            titleView.setText("입력 내용이 사라질 수 있어요");
+            messageView.setText("저장하지 않고 이동하면 현재 입력한 단어장 내용이 사라집니다. 이동할까요?");
+        }
+
+        cancelButton.setOnClickListener(v -> dialog.dismiss());
+        confirmButton.setOnClickListener(v -> {
+            dialog.dismiss();
+            if (onConfirm != null) {
+                onConfirm.run();
+            }
+        });
+
+        dialog.setCancelable(false);
+        dialog.setCanceledOnTouchOutside(false);
+        dialog.show();
+
+        Window window = dialog.getWindow();
+        if (window != null) {
+            window.setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
+            window.setLayout(
+                    WindowManager.LayoutParams.MATCH_PARENT,
+                    WindowManager.LayoutParams.WRAP_CONTENT
+            );
+        }
+    }
+
+    private void clearAddEditForm() {
+        tvAddPageTitle.setText("새 단어장 추가");
+        etVocabName.setText("");
+        etVocabDesc.setText("");
+        containerWordRows.removeAllViews();
+        addNewWordRow("", "");
+        addNewWordRow("", "");
+        addNewWordRow("", "");
+        resetAddEditScrollPosition();
+    }
+
+    private void exitEditMode() {
+        editingVocabularyId = 0;
+    }
+
+    private void ensureAddEditFormReady() {
+        if (containerWordRows.getChildCount() == 0) {
+            clearAddEditForm();
+        }
+    }
+
     /**
      * 지정된 탭 아이템 ID에 맞추어 화면 레이아웃들의 시각적 가시성 전환
      */
@@ -366,20 +476,16 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
             TextView tvTitle = findViewById(R.id.tv_main_title);
             tvTitle.setText("단어장 편집실");
 
-            // 만약 현재 수정 기조(editingVocabularyId > 0)가 아니라면, 깨끗이 비우고 3개 기본행 제공
-            if (editingVocabularyId == 0) {
-                tvAddPageTitle.setText("새 단어장 추가");
-                etVocabName.setText("");
-                etVocabDesc.setText("");
-                containerWordRows.removeAllViews();
-                addNewWordRow("", "");
-                addNewWordRow("", "");
-                addNewWordRow("", "");
-            }
+            ensureAddEditFormReady();
+            resetAddEditScrollPosition();
         } else if (itemId == R.id.nav_settings) {
             Toast.makeText(this, "설정 창은 다음 추가 편의 기능 업데이트 예정입니다.", Toast.LENGTH_SHORT).show();
             // 탭 변경 없이 이전 탭 유지되도록 재설정 방지
         }
+    }
+
+    private void resetAddEditScrollPosition() {
+        tabContainerAdd.post(() -> tabContainerAdd.scrollTo(0, 0));
     }
 
     @Override
@@ -786,7 +892,8 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
                 Toast.makeText(MainActivity.this, "단어장과 어휘 카드가 성공적으로 안전하게 저장되었습니다!", Toast.LENGTH_SHORT).show();
                 
                 // 신규/수정 상태 클리어링
-                editingVocabularyId = 0;
+                exitEditMode();
+                clearAddEditForm();
                 
                 // 탭 1로 원상 복구 귀환
                 bottomNavigation.setSelectedItemId(R.id.nav_vocab);
