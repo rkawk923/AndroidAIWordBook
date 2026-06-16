@@ -378,21 +378,12 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
      * 단어 입력 정보를 바탕으로 뜻을 AI(Gemini 3.5 Flash)를 통해 자동 제안 한화면에 세팅
      */
     private void executeAiSmartFill() {
-        final List<String> wordsToFill = new ArrayList<>();
-        final List<EditText> targetMeaningsList = new ArrayList<>();
-
-        // 현재 추가되어 있는 행들 루핑하며 미비한 뜻 수집
-        for (int i = 0; i < containerWordRows.getChildCount(); i++) {
-            View row = containerWordRows.getChildAt(i);
-            EditText etW = row.findViewById(R.id.et_row_word);
-            EditText etM = row.findViewById(R.id.et_row_meaning);
-
-            String w = etW.getText().toString().trim();
-            if (!w.isEmpty()) {
-                wordsToFill.add(w);
-                targetMeaningsList.add(etM);
-            }
+        if (!hasEmptyMeanings()) {
+            Toast.makeText(this, "비어 있는 뜻이 없어요.", Toast.LENGTH_SHORT).show();
+            return;
         }
+
+        final List<String> wordsToFill = collectWordsWithEmptyMeaning();
 
         if (wordsToFill.isEmpty()) {
             Toast.makeText(this, "뜻을 매칭하고 완성할 영단어를 최소 1개 이상 왼쪽 폼에 입력해 주세요.", Toast.LENGTH_SHORT).show();
@@ -413,22 +404,7 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
                     return;
                 }
 
-                int matchCount = 0;
-                // UI 순서에 알맞게 단어 뜻 자동 배치
-                for (GeminiHelper.WordResult res : results) {
-                    for (int i = 0; i < containerWordRows.getChildCount(); i++) {
-                        View row = containerWordRows.getChildAt(i);
-                        EditText etW = row.findViewById(R.id.et_row_word);
-                        EditText etM = row.findViewById(R.id.et_row_meaning);
-
-                        String currentWord = etW.getText().toString().trim();
-                        if (currentWord.equalsIgnoreCase(res.word)) {
-                            etM.setText(res.meaning);
-                            matchCount++;
-                            break;
-                        }
-                    }
-                }
+                int matchCount = applyMeaningsOnlyToEmptyFields(results);
                 Toast.makeText(MainActivity.this, "총 " + matchCount + "개의 영어 어휘 뜻풀이가 AI로 자동 삽입 보완 완료되었습니다!", Toast.LENGTH_LONG).show();
             }
 
@@ -438,6 +414,62 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
                 Toast.makeText(MainActivity.this, errorMessage, Toast.LENGTH_LONG).show();
             }
         });
+    }
+
+    private boolean hasEmptyMeanings() {
+        for (int i = 0; i < containerWordRows.getChildCount(); i++) {
+            View row = containerWordRows.getChildAt(i);
+            EditText etMeaning = row.findViewById(R.id.et_row_meaning);
+            if (isEditTextEmpty(etMeaning)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private List<String> collectWordsWithEmptyMeaning() {
+        List<String> wordsToFill = new ArrayList<>();
+        for (int i = 0; i < containerWordRows.getChildCount(); i++) {
+            View row = containerWordRows.getChildAt(i);
+            EditText etWord = row.findViewById(R.id.et_row_word);
+            EditText etMeaning = row.findViewById(R.id.et_row_meaning);
+
+            String word = etWord.getText().toString().trim();
+            if (!word.isEmpty() && isEditTextEmpty(etMeaning)) {
+                wordsToFill.add(word);
+            }
+        }
+        return wordsToFill;
+    }
+
+    private int applyMeaningsOnlyToEmptyFields(List<GeminiHelper.WordResult> results) {
+        int matchCount = 0;
+        for (int i = 0; i < containerWordRows.getChildCount(); i++) {
+            View row = containerWordRows.getChildAt(i);
+            EditText etWord = row.findViewById(R.id.et_row_word);
+            EditText etMeaning = row.findViewById(R.id.et_row_meaning);
+
+            String currentWord = etWord.getText().toString().trim();
+            if (currentWord.isEmpty() || !isEditTextEmpty(etMeaning)) {
+                continue;
+            }
+
+            for (GeminiHelper.WordResult result : results) {
+                if (result.word == null || result.meaning == null || result.meaning.trim().isEmpty()) {
+                    continue;
+                }
+                if (currentWord.equalsIgnoreCase(result.word.trim())) {
+                    etMeaning.setText(result.meaning.trim());
+                    matchCount++;
+                    break;
+                }
+            }
+        }
+        return matchCount;
+    }
+
+    private boolean isEditTextEmpty(EditText editText) {
+        return editText == null || editText.getText().toString().trim().isEmpty();
     }
 
     /**
