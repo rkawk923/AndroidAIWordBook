@@ -30,7 +30,7 @@
     <dimen name="empty_state_height">260dp</dimen>
     <dimen name="report_empty_height">220dp</dimen>
     <dimen name="report_progress_area_height">120dp</dimen>
-    <dimen name="report_progress_size">100dp</dimen>
+    <dimen name="report_progress_size">120dp</dimen>
     <dimen name="vocabulary_list_bottom_padding">32dp</dimen>
     <dimen name="card_action_height">40dp</dimen>
     <dimen name="card_action_min_width">72dp</dimen>

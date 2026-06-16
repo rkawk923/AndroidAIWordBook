@@ -20,6 +20,7 @@ import com.example.database.VocabularyDao;
 import com.example.database.WordDao;
 import com.example.model.VocabularyEntity;
 import com.example.model.WordEntity;
+import com.example.util.AppToast;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -265,7 +266,7 @@ public class VocabularyDetailActivity extends AppCompatActivity {
 
         int targetIndex = currentStudyIndex + action;
         if (targetIndex < 0) {
-            Toast.makeText(this, "첫 번째 단어장 카드입니다.", Toast.LENGTH_SHORT).show();
+            AppToast.show(this, "첫 번째 단어예요.");
             return;
         }
 

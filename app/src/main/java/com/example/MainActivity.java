@@ -16,9 +16,7 @@ import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -34,6 +32,8 @@ import com.example.model.VocabularyEntity;
 import com.example.model.WordEntity;
 import com.example.service.GeminiHelper;
 import com.example.service.PdfWordExtractor;
+import com.example.util.AppToast;
+import com.example.view.DonutProgressView;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -80,7 +80,7 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
     private View cardLearnEmpty;
     private View layoutLearnActive;
     private TextView tvLearnVocabName;
-    private ProgressBar pbLearnCircle;
+    private DonutProgressView pbLearnCircle;
     private TextView tvLearnPercent;
     private TextView tvLearnProgressRatio;
     private View btnResumeStudy;
@@ -245,7 +245,7 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
     }
 
     private void showShortMessage(String message) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+        AppToast.show(this, message);
     }
 
     private void showSimpleMessageDialog(String title, String message) {
@@ -516,7 +516,7 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
             ensureAddEditFormReady();
             resetAddEditScrollPosition();
         } else if (itemId == R.id.nav_settings) {
-            Toast.makeText(this, "설정 창은 다음 추가 편의 기능 업데이트 예정입니다.", Toast.LENGTH_SHORT).show();
+            showShortMessage("설정 기능은 준비 중이에요.");
             // 탭 변경 없이 이전 탭 유지되도록 재설정 방지
         }
     }
@@ -651,14 +651,14 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
      */
     private void executeAiSmartFill() {
         if (!hasEmptyMeanings()) {
-            Toast.makeText(this, "비어 있는 뜻이 없어요.", Toast.LENGTH_SHORT).show();
+            showShortMessage("비어 있는 뜻이 없어요.");
             return;
         }
 
         final List<String> wordsToFill = collectWordsWithEmptyMeaning();
 
         if (wordsToFill.isEmpty()) {
-            Toast.makeText(this, "뜻을 매칭하고 완성할 영단어를 최소 1개 이상 왼쪽 폼에 입력해 주세요.", Toast.LENGTH_SHORT).show();
+            showShortMessage("뜻을 채울 영단어를 입력해 주세요.");
             return;
         }
 
@@ -674,12 +674,12 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
                 dialog.dismiss();
                 setAiLoadingState(false);
                 if (results == null || results.isEmpty()) {
-                    Toast.makeText(MainActivity.this, "AI 분석 뜻을 생성하지 못했습니다.", Toast.LENGTH_SHORT).show();
+                    showShortMessage("AI 분석 뜻을 생성하지 못했어요.");
                     return;
                 }
 
                 int matchCount = applyMeaningsOnlyToEmptyFields(results);
-                Toast.makeText(MainActivity.this, "총 " + matchCount + "개의 영어 어휘 뜻풀이가 AI로 자동 삽입 보완 완료되었습니다!", Toast.LENGTH_LONG).show();
+                showShortMessage(matchCount + "개 뜻을 AI로 채웠어요.");
             }
 
             @Override
@@ -808,11 +808,7 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
                 progress.dismiss();
                 setAiLoadingState(false);
                 if (results == null || results.isEmpty()) {
-                    Toast.makeText(
-                            MainActivity.this,
-                            "PDF에서 중요 단어를 추출하지 못했습니다.",
-                            Toast.LENGTH_SHORT
-                    ).show();
+                    showShortMessage("PDF에서 단어를 찾지 못했어요.");
                     return;
                 }
 
@@ -836,12 +832,7 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
                 String limitMessage = pageLimitApplied
                         ? " 최대 " + PdfWordExtractor.MAX_PAGES + "페이지만 처리했습니다."
                         : "";
-                Toast.makeText(
-                        MainActivity.this,
-                        processedPages + "페이지 분석 완료, 중복 제외 " + results.size()
-                                + "개 단어를 추가했습니다." + limitMessage,
-                        Toast.LENGTH_LONG
-                ).show();
+                showShortMessage(processedPages + "페이지 분석 완료, " + results.size() + "개 단어를 추가했어요." + limitMessage);
             }
 
             @Override
@@ -984,7 +975,7 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
                         
                         loadVocabularyFolders();
                     });
-                    Toast.makeText(MainActivity.this, "단어장이 완전 삭제되었습니다.", Toast.LENGTH_SHORT).show();
+                    showShortMessage("단어장이 삭제되었어요.");
                 })
                 .setNegativeButton("취소", (dialog, which) -> dialog.dismiss())
                 .show();
