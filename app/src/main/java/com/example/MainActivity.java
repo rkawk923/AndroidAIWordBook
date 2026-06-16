@@ -95,6 +95,7 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
     private MaterialButton btnAiComplete;
     private MaterialButton btnPdfExtract;
     private boolean isTabNavigationConfirmed = false;
+    private AlertDialog simpleMessageDialog;
     private int editingVocabularyId = 0; // 0이면 신규 추가, >0이면 특정 단어장 편집 수정
 
     @Override
@@ -243,6 +244,42 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
         }
     }
 
+    private void showShortMessage(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+    }
+
+    private void showSimpleMessageDialog(String title, String message) {
+        if (simpleMessageDialog != null && simpleMessageDialog.isShowing()) {
+            return;
+        }
+
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_simple_message, null);
+        simpleMessageDialog = new MaterialAlertDialogBuilder(this)
+                .setView(dialogView)
+                .create();
+
+        TextView titleView = dialogView.findViewById(R.id.tv_simple_message_title);
+        TextView messageView = dialogView.findViewById(R.id.tv_simple_message_body);
+        MaterialButton confirmButton = dialogView.findViewById(R.id.btn_simple_message_confirm);
+
+        titleView.setText(title);
+        messageView.setText(message);
+        confirmButton.setOnClickListener(v -> simpleMessageDialog.dismiss());
+
+        simpleMessageDialog.setOnDismissListener(dialog -> simpleMessageDialog = null);
+        simpleMessageDialog.setCancelable(false);
+        simpleMessageDialog.setCanceledOnTouchOutside(false);
+        simpleMessageDialog.show();
+
+        Window window = simpleMessageDialog.getWindow();
+        if (window != null) {
+            window.setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
+            window.setLayout(
+                    WindowManager.LayoutParams.MATCH_PARENT,
+                    WindowManager.LayoutParams.WRAP_CONTENT
+            );
+        }
+    }
     private String getUserFriendlyAiErrorTitle(String errorMessage) {
         String normalized = normalizeAiErrorMessage(errorMessage);
         if (isQuotaExceededError(normalized)) {
@@ -823,16 +860,42 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
     /**
      * 입력실에 구성 완료한 데이터를 최종 DB에 갱신/추가 세진처리
      */
-    private void saveVocabularyData() {
-        final String name = etVocabName.getText().toString().trim();
-        final String desc = etVocabDesc.getText().toString().trim();
+    private boolean validateVocabularyTitle() {
+        String title = etVocabName.getText().toString().trim();
+        if (title.isEmpty()) {
+            etVocabName.setError("단어장 제목을 입력해 주세요.");
+            etVocabName.requestFocus();
+            return false;
+        }
+        etVocabName.setError(null);
+        return true;
+    }
 
-        if (name.isEmpty()) {
-            Toast.makeText(this, "단어장 이름을 반드시 입력해 주세요.", Toast.LENGTH_SHORT).show();
+    private boolean hasAtLeastOneWord() {
+        for (int i = 0; i < containerWordRows.getChildCount(); i++) {
+            View row = containerWordRows.getChildAt(i);
+            EditText etWord = row.findViewById(R.id.et_row_word);
+            if (!isEditTextEmpty(etWord)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    private void saveVocabularyData() {
+        if (!validateVocabularyTitle()) {
             return;
         }
 
-        // 수집된 목록 목록 체크
+        if (!hasAtLeastOneWord()) {
+            showSimpleMessageDialog("단어를 추가해 주세요", "저장할 단어가 하나 이상 필요해요.");
+            return;
+        }
+
+        final String name = etVocabName.getText().toString().trim();
+        final String desc = etVocabDesc.getText().toString().trim();
+        final boolean isEditMode = editingVocabularyId > 0;
+        final int targetVocabularyId = editingVocabularyId;
+
         final List<WordEntity> targetWords = new ArrayList<>();
         for (int i = 0; i < containerWordRows.getChildCount(); i++) {
             View row = containerWordRows.getChildAt(i);
@@ -843,13 +906,12 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
             String m = etM.getText().toString().trim();
 
             if (!w.isEmpty()) {
-                // 단어객체 가상 형성 (vocabularyId는 추적저장 시 조절)
                 targetWords.add(new WordEntity(0, w, m));
             }
         }
 
         if (targetWords.isEmpty()) {
-            Toast.makeText(this, "단어를 최소한 1가지 이상 입력해 주세요.", Toast.LENGTH_SHORT).show();
+            showSimpleMessageDialog("단어를 추가해 주세요", "저장할 단어가 하나 이상 필요해요.");
             return;
         }
 
@@ -859,49 +921,51 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
         dialog.show();
 
         dbExecutor.execute(() -> {
-            if (editingVocabularyId > 0) {
-                // 1. 단어장 업데이트
-                VocabularyEntity folder = vocabularyDao.getVocabularyById(editingVocabularyId);
-                if (folder != null) {
+            try {
+                if (isEditMode) {
+                    VocabularyEntity folder = vocabularyDao.getVocabularyById(targetVocabularyId);
+                    if (folder == null) {
+                        throw new IllegalStateException("Vocabulary not found: " + targetVocabularyId);
+                    }
+
                     folder.setName(name);
                     folder.setDescription(desc);
                     vocabularyDao.update(folder);
+                    wordDao.deleteWordsByVocabularyId(targetVocabularyId);
 
-                    // 2. 해당 단어장 이전 단어 덤프 폭포 클린 아웃
-                    wordDao.deleteWordsByVocabularyId(editingVocabularyId);
-
-                    // 3. 다시 깨끗이 기재 주입
                     for (WordEntity wrd : targetWords) {
-                        wrd.setVocabularyId(editingVocabularyId);
+                        wrd.setVocabularyId(targetVocabularyId);
+                        wordDao.insert(wrd);
+                    }
+                } else {
+                    VocabularyEntity folder = new VocabularyEntity(name, desc);
+                    long newId = vocabularyDao.insert(folder);
+
+                    for (WordEntity wrd : targetWords) {
+                        wrd.setVocabularyId((int) newId);
                         wordDao.insert(wrd);
                     }
                 }
-            } else {
-                // 신규
-                VocabularyEntity folder = new VocabularyEntity(name, desc);
-                long newId = vocabularyDao.insert(folder);
 
-                for (WordEntity wrd : targetWords) {
-                    wrd.setVocabularyId((int) newId);
-                    wordDao.insert(wrd);
-                }
+                runOnUiThread(() -> {
+                    dialog.dismiss();
+                    showShortMessage(isEditMode ? "단어장이 수정되었어요." : "단어장이 저장되었어요.");
+                    exitEditMode();
+                    clearAddEditForm();
+                    bottomNavigation.setSelectedItemId(R.id.nav_vocab);
+                });
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to save vocabulary. isEditMode=" + isEditMode, e);
+                runOnUiThread(() -> {
+                    dialog.dismiss();
+                    showSimpleMessageDialog(
+                            isEditMode ? "수정하지 못했어요" : "저장하지 못했어요",
+                            "일시적인 오류가 발생했어요. 잠시 후 다시 시도해 주세요."
+                    );
+                });
             }
-
-            runOnUiThread(() -> {
-                dialog.dismiss();
-                Toast.makeText(MainActivity.this, "단어장과 어휘 카드가 성공적으로 안전하게 저장되었습니다!", Toast.LENGTH_SHORT).show();
-                
-                // 신규/수정 상태 클리어링
-                exitEditMode();
-                clearAddEditForm();
-                
-                // 탭 1로 원상 복구 귀환
-                bottomNavigation.setSelectedItemId(R.id.nav_vocab);
-            });
         });
     }
-
-    // --- 단어장 삭제 질문 대화상자 ---
 
     private void showDeleteConfirmDialog(final VocabularyEntity vocabulary) {
         new MaterialAlertDialogBuilder(this)
