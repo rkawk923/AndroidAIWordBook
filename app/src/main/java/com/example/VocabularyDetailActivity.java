@@ -1,13 +1,17 @@
 package com.example;
 
 import android.content.SharedPreferences;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
@@ -18,6 +22,7 @@ import com.example.model.VocabularyEntity;
 import com.example.model.WordEntity;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -62,6 +67,7 @@ public class VocabularyDetailActivity extends AppCompatActivity {
     private MaterialButton btnStudyPrev;
     private MaterialButton btnStudyNext;
     private ImageView btnBookmark;
+    private AlertDialog studyCompleteDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -264,7 +270,7 @@ public class VocabularyDetailActivity extends AppCompatActivity {
         }
 
         if (targetIndex >= activeWordList.size()) {
-            Toast.makeText(this, "축하합니다! 해당 단어장의 모든 어휘 학습을 모두 완주하셨습니다!", Toast.LENGTH_LONG).show();
+            showStudyCompleteDialog();
             return;
         }
 
@@ -273,9 +279,61 @@ public class VocabularyDetailActivity extends AppCompatActivity {
         bindWordToFlashcard();
     }
 
+    private void showStudyCompleteDialog() {
+        if (isFinishing() || isDestroyed()) {
+            return;
+        }
+        if (studyCompleteDialog != null && studyCompleteDialog.isShowing()) {
+            return;
+        }
+
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_study_complete, null);
+        studyCompleteDialog = new MaterialAlertDialogBuilder(this)
+                .setView(dialogView)
+                .create();
+
+        MaterialButton btnRestart = dialogView.findViewById(R.id.btn_study_complete_restart);
+        MaterialButton btnList = dialogView.findViewById(R.id.btn_study_complete_list);
+        MaterialButton btnConfirm = dialogView.findViewById(R.id.btn_study_complete_confirm);
+
+        btnRestart.setOnClickListener(v -> {
+            restartStudyFromBeginning();
+            studyCompleteDialog.dismiss();
+        });
+        btnList.setOnClickListener(v -> {
+            studyCompleteDialog.dismiss();
+            finish();
+        });
+        btnConfirm.setOnClickListener(v -> studyCompleteDialog.dismiss());
+
+        studyCompleteDialog.setOnDismissListener(dialog -> studyCompleteDialog = null);
+        studyCompleteDialog.setCancelable(false);
+        studyCompleteDialog.setCanceledOnTouchOutside(false);
+        studyCompleteDialog.show();
+
+        Window window = studyCompleteDialog.getWindow();
+        if (window != null) {
+            window.setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
+            window.setLayout(
+                    WindowManager.LayoutParams.MATCH_PARENT,
+                    WindowManager.LayoutParams.WRAP_CONTENT
+            );
+        }
+    }
+
+    private void restartStudyFromBeginning() {
+        currentStudyIndex = 0;
+        resetCardVisibilityState();
+        bindWordToFlashcard();
+    }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (studyCompleteDialog != null && studyCompleteDialog.isShowing()) {
+            studyCompleteDialog.dismiss();
+        }
+        studyCompleteDialog = null;
         if (dbExecutor != null && !dbExecutor.isShutdown()) {
             dbExecutor.shutdown();
         }
