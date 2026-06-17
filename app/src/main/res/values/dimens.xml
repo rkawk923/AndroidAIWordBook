@@ -35,6 +35,7 @@
     <dimen name="card_action_height">40dp</dimen>
     <dimen name="card_action_min_width">72dp</dimen>
     <dimen name="word_input_row_padding">12dp</dimen>
+    <dimen name="toast_text_max_width">220dp</dimen>
 
     <!-- Shape -->
     <dimen name="radius_extra_small">8dp</dimen>

@@ -251,7 +251,7 @@
                 <!-- Navigation -->
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/button_height_large"
+                    android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/space_20"
                     android:orientation="horizontal">
 
@@ -259,18 +259,22 @@
                         android:id="@+id/btn_study_prev"
                         style="@style/Widget.AIWordBook.Button.Secondary"
                         android:layout_width="0dp"
-                        android:layout_height="match_parent"
+                        android:layout_height="wrap_content"
                         android:layout_marginEnd="@dimen/space_8"
                         android:layout_weight="1"
+                        android:minHeight="@dimen/button_height_large"
+                        android:maxLines="2"
                         android:text="이전" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_study_next"
                         style="@style/Widget.AIWordBook.Button.Primary"
                         android:layout_width="0dp"
-                        android:layout_height="match_parent"
+                        android:layout_height="wrap_content"
                         android:layout_marginStart="@dimen/space_8"
                         android:layout_weight="1"
+                        android:minHeight="@dimen/button_height_large"
+                        android:maxLines="2"
                         android:text="다음" />
 
                 </LinearLayout>

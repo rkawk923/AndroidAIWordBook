@@ -89,13 +89,14 @@
                             <EditText
                                 android:id="@+id/et_search"
                                 android:layout_width="match_parent"
-                                android:layout_height="@dimen/input_height"
+                                android:layout_height="wrap_content"
                                 android:background="@drawable/bg_search_input"
                                 android:hint="단어장 검색"
                                 android:textColorHint="@color/app_text_tertiary"
                                 android:textSize="@dimen/text_body"
                                 android:inputType="text"
                                 android:maxLines="1"
+                                android:minHeight="@dimen/input_height"
                                 android:paddingStart="@dimen/space_48"
                                 android:paddingEnd="@dimen/space_16"
                                 android:selectAllOnFocus="false"
@@ -297,10 +298,11 @@
 
                             <TextView
                                 android:id="@+id/tv_learn_progress_ratio"
-                                android:layout_width="wrap_content"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_gravity="center_horizontal"
                                 android:layout_marginTop="@dimen/space_12"
+                                android:gravity="center"
                                 android:text="학습완료: 30 / 전체: 40 단어"
                                 android:textColor="@color/app_text_secondary"
                                 android:textSize="@dimen/text_body"
@@ -315,7 +317,9 @@
                         android:id="@+id/btn_resume_study"
                         style="@style/Widget.AIWordBook.Button.Primary"
                         android:layout_width="match_parent"
-                        android:layout_height="@dimen/button_height_large"
+                        android:layout_height="wrap_content"
+                        android:minHeight="@dimen/button_height_large"
+                        android:maxLines="2"
                         android:text="이어서 학습하기" />
 
                 </LinearLayout>
@@ -471,7 +475,7 @@
                                 android:minHeight="@dimen/button_height"
                                 android:text="PDF에서 단어 가져오기"
                                 android:textColor="@color/app_primary"
-                                android:maxLines="1"
+                                android:maxLines="2"
                                 android:layout_marginBottom="@dimen/space_8" />
 
                             <com.google.android.material.button.MaterialButton
@@ -482,7 +486,7 @@
                                 android:minHeight="@dimen/button_height"
                                 android:text="빈 뜻 AI로 채우기"
                                 android:textColor="@color/app_primary"
-                                android:maxLines="1" />
+                                android:maxLines="2" />
 
                         </LinearLayout>
 
@@ -527,7 +531,9 @@
                                 android:id="@+id/btn_add_row"
                                 style="@style/Widget.AIWordBook.Button.Secondary"
                                 android:layout_width="match_parent"
-                                android:layout_height="@dimen/button_height"
+                                android:layout_height="wrap_content"
+                                android:minHeight="@dimen/button_height"
+                                android:maxLines="2"
                                 android:text="단어 추가" />
 
                         </LinearLayout>
@@ -538,7 +544,9 @@
                         android:id="@+id/btn_save_vocabulary"
                         style="@style/Widget.AIWordBook.Button.Primary"
                         android:layout_width="match_parent"
-                        android:layout_height="@dimen/button_height_large"
+                        android:layout_height="wrap_content"
+                        android:minHeight="@dimen/button_height_large"
+                        android:maxLines="2"
                         android:text="단어장 저장" />
 
                 </LinearLayout>
