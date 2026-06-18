@@ -553,6 +553,162 @@
 
             </ScrollView>
 
+            <!-- TAB 4: 설정 -->
+            <ScrollView
+                android:id="@+id/tab_container_settings"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:fillViewport="true"
+                android:overScrollMode="never"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="@dimen/screen_padding"
+                    android:paddingBottom="@dimen/space_32">
+
+                    <com.google.android.material.card.MaterialCardView
+                        style="@style/Widget.AIWordBook.Card"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="@dimen/space_16">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="@dimen/card_padding">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Gemini API Key"
+                                android:textAppearance="@style/TextAppearance.AIWordBook.Title" />
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="@dimen/space_4"
+                                android:layout_marginBottom="@dimen/space_16"
+                                android:text="직접 저장한 키가 앱 기본 키보다 우선 사용됩니다. 키 값은 화면과 로그에 노출하지 마세요."
+                                android:textAppearance="@style/TextAppearance.AIWordBook.Body.Secondary" />
+
+                            <com.google.android.material.textfield.TextInputLayout
+                                style="@style/Widget.AIWordBook.TextInputLayout"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:hint="Gemini API Key"
+                                app:endIconMode="password_toggle">
+
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/et_gemini_api_key"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:inputType="textPassword"
+                                    android:maxLines="1"
+                                    android:importantForAutofill="noExcludeDescendants"
+                                    android:textColor="@color/app_text_primary" />
+
+                            </com.google.android.material.textfield.TextInputLayout>
+
+                            <TextView
+                                android:id="@+id/tv_api_key_status"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="@dimen/space_8"
+                                android:textAppearance="@style/TextAppearance.AIWordBook.Caption"
+                                tools:text="사용자 API Key를 우선 사용합니다." />
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="@dimen/space_16"
+                                android:orientation="horizontal">
+
+                                <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/btn_delete_api_key"
+                                    style="@style/Widget.AIWordBook.Button.Danger"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginEnd="@dimen/space_8"
+                                    android:layout_weight="1"
+                                    android:text="삭제" />
+
+                                <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/btn_save_api_key"
+                                    style="@style/Widget.AIWordBook.Button.Primary"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="@dimen/space_8"
+                                    android:layout_weight="1"
+                                    android:text="저장" />
+
+                            </LinearLayout>
+
+                        </LinearLayout>
+
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <com.google.android.material.card.MaterialCardView
+                        style="@style/Widget.AIWordBook.Card"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="@dimen/card_padding">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="학습 카드 기본 표시"
+                                android:textAppearance="@style/TextAppearance.AIWordBook.Title" />
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="@dimen/space_4"
+                                android:layout_marginBottom="@dimen/space_12"
+                                android:text="학습 시작과 이전·다음 단어 이동 시 적용됩니다."
+                                android:textAppearance="@style/TextAppearance.AIWordBook.Body.Secondary" />
+
+                            <com.google.android.material.materialswitch.MaterialSwitch
+                                android:id="@+id/switch_show_word_on_start"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:minHeight="@dimen/touch_target"
+                                android:checked="true"
+                                android:text="학습 시작 시 단어 카드 보이기"
+                                android:textAppearance="@style/TextAppearance.AIWordBook.Body.Large" />
+
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="1dp"
+                                android:layout_marginVertical="@dimen/space_8"
+                                android:background="@color/app_divider" />
+
+                            <com.google.android.material.materialswitch.MaterialSwitch
+                                android:id="@+id/switch_show_meaning_on_start"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:minHeight="@dimen/touch_target"
+                                android:checked="false"
+                                android:text="학습 시작 시 뜻 카드 보이기"
+                                android:textAppearance="@style/TextAppearance.AIWordBook.Body.Large" />
+
+                        </LinearLayout>
+
+                    </com.google.android.material.card.MaterialCardView>
+
+                </LinearLayout>
+
+            </ScrollView>
+
         </FrameLayout>
 
         <com.google.android.material.bottomnavigation.BottomNavigationView

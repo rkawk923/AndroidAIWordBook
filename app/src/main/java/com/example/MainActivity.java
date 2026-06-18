@@ -33,10 +33,12 @@ import com.example.model.WordEntity;
 import com.example.service.GeminiHelper;
 import com.example.service.PdfWordExtractor;
 import com.example.util.AppToast;
+import com.example.util.SettingsManager;
 import com.example.view.DonutProgressView;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.materialswitch.MaterialSwitch;
 import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.ArrayList;
@@ -98,6 +100,13 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
     private AlertDialog simpleMessageDialog;
     private int editingVocabularyId = 0; // 0이면 신규 추가, >0이면 특정 단어장 편집 수정
 
+    // Tab 4 UI (설정)
+    private View tabContainerSettings;
+    private TextInputEditText etGeminiApiKey;
+    private TextView tvApiKeyStatus;
+    private MaterialSwitch switchShowWordOnStart;
+    private MaterialSwitch switchShowMeaningOnStart;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -108,13 +117,14 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
         vocabularyDao = db.vocabularyDao();
         wordDao = db.wordDao();
         dbExecutor = Executors.newSingleThreadExecutor();
-        geminiHelper = new GeminiHelper();
+        geminiHelper = new GeminiHelper(this);
         pdfWordExtractor = new PdfWordExtractor(this, geminiHelper);
 
         // 메인 멀티 탭 구조 그릇 연결
         tabContainerVocab = findViewById(R.id.tab_container_vocab);
         tabContainerLearn = findViewById(R.id.tab_container_learn);
         tabContainerAdd = findViewById(R.id.tab_container_add);
+        tabContainerSettings = findViewById(R.id.tab_container_settings);
 
         // --- TAB 1 (단어장 목록) 초기화 ---
         rvVocabularies = findViewById(R.id.rv_vocabularies);
@@ -179,6 +189,21 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
         btnPdfExtract.setOnClickListener(v -> triggerPdfSelection());
 
         findViewById(R.id.btn_add_help).setOnClickListener(v -> showHelpDialog());
+
+        // --- TAB 4 (설정) 초기화 ---
+        etGeminiApiKey = findViewById(R.id.et_gemini_api_key);
+        tvApiKeyStatus = findViewById(R.id.tv_api_key_status);
+        switchShowWordOnStart = findViewById(R.id.switch_show_word_on_start);
+        switchShowMeaningOnStart = findViewById(R.id.switch_show_meaning_on_start);
+        findViewById(R.id.btn_save_api_key).setOnClickListener(v -> saveUserApiKey());
+        findViewById(R.id.btn_delete_api_key).setOnClickListener(v -> deleteUserApiKey());
+        switchShowWordOnStart.setOnCheckedChangeListener((button, checked) ->
+                SettingsManager.setShowWordOnStart(this, checked)
+        );
+        switchShowMeaningOnStart.setOnCheckedChangeListener((button, checked) ->
+                SettingsManager.setShowMeaningOnStart(this, checked)
+        );
+        loadSettingsUi();
 
         // 첫 기동 샘플 단어 점검 및 주입
         checkAndPrepopulateSampleData();
@@ -493,14 +518,16 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
             tabContainerVocab.setVisibility(View.VISIBLE);
             tabContainerLearn.setVisibility(View.GONE);
             tabContainerAdd.setVisibility(View.GONE);
+            tabContainerSettings.setVisibility(View.GONE);
             // 메인 툴바 텍스트 복구
             TextView tvTitle = findViewById(R.id.tv_main_title);
-            tvTitle.setText("AI 스마트 단어장");
+            tvTitle.setText("AI 스마트 단어장 22260039 이규형");
             loadVocabularyFolders();
         } else if (itemId == R.id.nav_learn) {
             tabContainerVocab.setVisibility(View.GONE);
             tabContainerLearn.setVisibility(View.VISIBLE);
             tabContainerAdd.setVisibility(View.GONE);
+            tabContainerSettings.setVisibility(View.GONE);
             // 메인 툴바 타이틀
             TextView tvTitle = findViewById(R.id.tv_main_title);
             tvTitle.setText("나의 실시간 학습");
@@ -509,6 +536,7 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
             tabContainerVocab.setVisibility(View.GONE);
             tabContainerLearn.setVisibility(View.GONE);
             tabContainerAdd.setVisibility(View.VISIBLE);
+            tabContainerSettings.setVisibility(View.GONE);
             // 메인 툴바 타이틀
             TextView tvTitle = findViewById(R.id.tv_main_title);
             tvTitle.setText("단어장 편집실");
@@ -516,9 +544,66 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
             ensureAddEditFormReady();
             resetAddEditScrollPosition();
         } else if (itemId == R.id.nav_settings) {
-            showShortMessage("설정 기능은 준비 중이에요.");
-            // 탭 변경 없이 이전 탭 유지되도록 재설정 방지
+            tabContainerVocab.setVisibility(View.GONE);
+            tabContainerLearn.setVisibility(View.GONE);
+            tabContainerAdd.setVisibility(View.GONE);
+            tabContainerSettings.setVisibility(View.VISIBLE);
+            TextView tvTitle = findViewById(R.id.tv_main_title);
+            tvTitle.setText("설정");
+            loadSettingsUi();
         }
+    }
+
+    private void loadSettingsUi() {
+        String userApiKey = SettingsManager.getUserGeminiApiKey(this);
+        etGeminiApiKey.setText(userApiKey);
+        switchShowWordOnStart.setChecked(SettingsManager.isShowWordOnStart(this));
+        switchShowMeaningOnStart.setChecked(SettingsManager.isShowMeaningOnStart(this));
+        updateApiKeyStatus();
+    }
+
+    private void saveUserApiKey() {
+        String apiKey = etGeminiApiKey.getText() == null
+                ? ""
+                : etGeminiApiKey.getText().toString().trim();
+        if (apiKey.isEmpty()) {
+            showSimpleMessageDialog(
+                    "API Key를 입력해 주세요",
+                    "저장할 Gemini API Key를 입력하거나, 기존 사용자 키를 삭제하려면 삭제 버튼을 눌러 주세요."
+            );
+            return;
+        }
+        SettingsManager.saveUserGeminiApiKey(this, apiKey);
+        updateApiKeyStatus();
+        showShortMessage("Gemini API Key를 저장했어요.");
+    }
+
+    private void deleteUserApiKey() {
+        SettingsManager.deleteUserGeminiApiKey(this);
+        etGeminiApiKey.setText("");
+        updateApiKeyStatus();
+        showShortMessage("사용자 API Key를 삭제했어요.");
+    }
+
+    private void updateApiKeyStatus() {
+        if (SettingsManager.hasUserGeminiApiKey(this)) {
+            tvApiKeyStatus.setText("사용자 API Key를 우선 사용합니다.");
+        } else if (SettingsManager.isGeminiApiConfigured(this)) {
+            tvApiKeyStatus.setText("앱 기본 API Key를 사용합니다.");
+        } else {
+            tvApiKeyStatus.setText("사용 가능한 API Key가 없습니다.");
+        }
+    }
+
+    private boolean ensureGeminiApiKeyConfigured() {
+        if (SettingsManager.isGeminiApiConfigured(this)) {
+            return true;
+        }
+        showSimpleMessageDialog(
+                "Gemini API Key가 필요해요",
+                "설정 탭에서 본인의 Gemini API Key를 입력하고 저장한 뒤 다시 시도해 주세요."
+        );
+        return false;
     }
 
     private void resetAddEditScrollPosition() {
@@ -662,6 +747,10 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
             return;
         }
 
+        if (!ensureGeminiApiKeyConfigured()) {
+            return;
+        }
+
         final ProgressDialog dialog = new ProgressDialog(this);
         dialog.setMessage("스마트 AI가 입력한 핵심 영단어 뜻풀이와 파생 의미를 분석하여 추천 기재 중입니다...");
         dialog.setCancelable(false);
@@ -755,6 +844,9 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
      * PDF 파선택을 유도하는 인텐트 트리거
      */
     private void triggerPdfSelection() {
+        if (!ensureGeminiApiKeyConfigured()) {
+            return;
+        }
         setAiLoadingState(true);
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("application/pdf");
@@ -775,13 +867,10 @@ public class MainActivity extends AppCompatActivity implements VocabularyAdapter
      * 선택한 PDF의 페이지를 순서대로 분석하여 추출된 단어를 입력 행에 추가합니다.
      */
     private void processPdfFile(Uri uri) {
-        if (!GeminiHelper.isApiConfigured()) {
+        if (!SettingsManager.isGeminiApiConfigured(this)) {
             setAiLoadingState(false);
             Log.e(TAG, "Gemini API key is not configured.");
-            showAiErrorDialog(
-                    getUserFriendlyAiErrorTitle("Gemini API Key가 설정되지 않았습니다."),
-                    getUserFriendlyAiErrorMessage("Gemini API Key가 설정되지 않았습니다.")
-            );
+            ensureGeminiApiKeyConfigured();
             return;
         }
 

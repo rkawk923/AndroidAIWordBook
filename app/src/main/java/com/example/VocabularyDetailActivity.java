@@ -21,6 +21,7 @@ import com.example.database.WordDao;
 import com.example.model.VocabularyEntity;
 import com.example.model.WordEntity;
 import com.example.util.AppToast;
+import com.example.util.SettingsManager;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -231,8 +232,8 @@ public class VocabularyDetailActivity extends AppCompatActivity {
     }
 
     private void resetCardVisibilityState() {
-        isWordVisible = true;
-        isMeaningVisible = false;
+        isWordVisible = SettingsManager.isShowWordOnStart(this);
+        isMeaningVisible = SettingsManager.isShowMeaningOnStart(this);
     }
 
     private void updateWordCardVisibility() {

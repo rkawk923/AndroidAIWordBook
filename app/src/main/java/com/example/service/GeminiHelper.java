@@ -1,10 +1,11 @@
 package com.example.service;
 
+import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
-import com.example.BuildConfig;
+import com.example.util.SettingsManager;
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
 import com.squareup.moshi.Types;
@@ -34,7 +35,6 @@ public class GeminiHelper {
     private static final String MODEL_NAME = "gemini-2.5-flash";
     private static final String API_URL = "https://generativelanguage.googleapis.com/v1beta/models/"
             + MODEL_NAME + ":generateContent";
-    private static final String PLACEHOLDER_API_KEY = "MY_GEMINI_API_KEY";
     private static final int LOG_CHUNK_SIZE = 3000;
     private static final int MAX_RETRIES = 2;
     private static final long RETRY_DELAY_MS = 1500L;
@@ -44,6 +44,7 @@ public class GeminiHelper {
     private final Moshi moshi;
     private final ExecutorService executor;
     private final Handler mainHandler;
+    private final Context appContext;
 
     public interface GeminiCallback {
         void onSuccess(List<WordResult> results);
@@ -67,6 +68,11 @@ public class GeminiHelper {
     }
 
     public GeminiHelper() {
+        this(null);
+    }
+
+    public GeminiHelper(Context context) {
+        this.appContext = context == null ? null : context.getApplicationContext();
         this.client = new OkHttpClient.Builder()
                 .connectTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
                 .readTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
@@ -77,11 +83,8 @@ public class GeminiHelper {
         this.mainHandler = new Handler(Looper.getMainLooper());
     }
 
-    public static boolean isApiConfigured() {
-        String apiKey = BuildConfig.GEMINI_API_KEY;
-        return apiKey != null
-                && !apiKey.trim().isEmpty()
-                && !PLACEHOLDER_API_KEY.equals(apiKey.trim());
+    public static boolean isApiConfigured(Context context) {
+        return SettingsManager.isGeminiApiConfigured(context);
     }
 
     /**
@@ -96,8 +99,8 @@ public class GeminiHelper {
                 }
 
                 // API Key 체크
-                if (!isApiConfigured()) {
-                    postError(callback, "Gemini API Key가 설정되지 않았습니다. 프로젝트 루트의 .env 파일을 확인해 주세요.");
+                if (!isApiConfigured(appContext)) {
+                    postError(callback, "Gemini API Key가 설정되지 않았습니다.");
                     return;
                 }
 
@@ -144,8 +147,8 @@ public class GeminiHelper {
     public void extractWordsFromPdfImage(final String base64Image, final GeminiCallback callback) {
         executor.execute(() -> {
             try {
-                if (!isApiConfigured()) {
-                    postError(callback, "Gemini API Key가 설정되지 않았습니다. 프로젝트 루트의 .env 파일을 확인해 주세요.");
+                if (!isApiConfigured(appContext)) {
+                    postError(callback, "Gemini API Key가 설정되지 않았습니다.");
                     return;
                 }
 
@@ -169,7 +172,7 @@ public class GeminiHelper {
     }
 
     List<WordResult> extractWordsFromPdfImageBlocking(String base64Image) throws IOException {
-        if (!isApiConfigured()) {
+        if (!isApiConfigured(appContext)) {
             throw new IOException("Gemini API Key가 설정되지 않았습니다.");
         }
         if (base64Image == null || base64Image.isEmpty()) {
@@ -220,9 +223,11 @@ public class GeminiHelper {
 
         String requestJson = moshi.adapter(Map.class).toJson(requestMap);
 
-        // Keep the real key outside source control. The Secrets Gradle Plugin exposes
-        // GEMINI_API_KEY from the root .env file as BuildConfig.GEMINI_API_KEY.
-        String fullUrl = API_URL + "?key=" + BuildConfig.GEMINI_API_KEY;
+        String apiKey = SettingsManager.getResolvedGeminiApiKey(appContext);
+        if (apiKey.isEmpty()) {
+            throw new IOException("Gemini API Key가 설정되지 않았습니다.");
+        }
+        String fullUrl = API_URL + "?key=" + apiKey;
         String redactedUrl = API_URL + "?key=<redacted>";
 
         Request request = new Request.Builder()
@@ -233,7 +238,7 @@ public class GeminiHelper {
 
         Log.d(TAG, "Gemini request URL: " + redactedUrl);
         Log.d(TAG, "Gemini request Content-Type: " + jsonMedia);
-        Log.d(TAG, "Gemini API key configured: " + isApiConfigured());
+        Log.d(TAG, "Gemini API key configured: " + isApiConfigured(appContext));
         logLong(Log.DEBUG, "Gemini request JSON: " + createSafeRequestLog(textPrompt, base64Image));
 
         for (int attempt = 0; attempt <= MAX_RETRIES; attempt++) {
